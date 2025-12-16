@@ -8,11 +8,60 @@
         :root { --app-bg: #f5f5f7; --accent: #ff9500; --text: #1d1d1f; --border: #d2d2d7; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--app-bg); display: flex; height: 100vh; overflow: hidden; }
         
+        .menu-btn {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 0px) + 12px);
+            left: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.12);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .menu-btn:active { transform: scale(0.98); }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 200;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+
         /* 侧边栏 */
-        .sidebar { width: 300px; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border-right: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; padding: 20px; z-index: 10; }
+        .sidebar { width: 300px; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border-right: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; padding: 20px; z-index: 10; position: relative; transition: transform 0.3s; }
         .back-link { text-decoration: none; color: var(--text); font-size: 14px; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; opacity: 0.6; }
         .title { font-size: 20px; font-weight: 700; margin-bottom: 5px; color: var(--accent); }
         .subtitle { font-size: 12px; color: #888; margin-bottom: 30px; }
+
+        .sidebar-close {
+            position: absolute;
+            right: 12px;
+            top: calc(env(safe-area-inset-top, 0px) + 10px);
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(118,118,128,0.14);
+            color: var(--text);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
         
         .control-group { margin-bottom: 20px; }
         .label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 8px; }
@@ -53,16 +102,62 @@
         .text-desc { font-size: 14px; color: #666; margin-top: 5px; }
 
         @media print {
-            .sidebar { display: none; }
+            .sidebar, .menu-btn, .overlay { display: none !important; }
             .main { padding: 0; display: block; }
             .sheet { box-shadow: none; width: 100%; height: 100%; margin: 0; gap: 5mm; }
             .problem-box { border: none; }
+        }
+
+        /* 移动端：抽屉侧栏 + 屏幕友好预览 */
+        @media (max-width: 860px) {
+            .menu-btn { display: inline-flex; }
+            body { height: 100dvh; overflow: hidden; }
+
+            .sidebar {
+                position: fixed;
+                top: 0; left: 0; bottom: 0;
+                width: min(320px, 86vw);
+                transform: translateX(-105%);
+                box-shadow: 2px 0 24px rgba(0,0,0,0.18);
+                border-right: 1px solid rgba(0,0,0,0.08);
+                z-index: 250;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-close { display: inline-flex; }
+
+            .main {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 68px 12px 28px;
+                justify-content: flex-start;
+            }
+
+            .sheet {
+                width: 100%;
+                min-height: auto;
+                padding: 12px;
+                gap: 12px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-rows: auto;
+            }
+
+            .counter-svg { width: 92px; height: 128px; }
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
+    <button class="menu-btn" type="button" aria-label="打开菜单" onclick="toggleSidebar(true)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="4" y1="7" x2="20" y2="7"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="17" x2="20" y2="17"></line>
+        </svg>
+    </button>
+    <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <button class="sidebar-close" type="button" aria-label="关闭菜单" onclick="toggleSidebar(false)">×</button>
         <a href="../" class="back-link">← 返回 YoBox 大厅</a>
         <div class="title">🧮 数位计数器</div>
         <div class="subtitle">针对11-20认识：画珠子、写数字</div>
@@ -99,6 +194,18 @@
     </main>
 
     <script>
+        function toggleSidebar(forceOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            if (!sidebar || !overlay) return;
+            const open = typeof forceOpen === 'boolean' ? forceOpen : !sidebar.classList.contains('open');
+            sidebar.classList.toggle('open', open);
+            overlay.classList.toggle('active', open);
+        }
+        window.addEventListener('resize', () => {
+            if (!window.matchMedia('(max-width: 860px)').matches) toggleSidebar(false);
+        });
+
         function generate() {
             const sheet = document.getElementById('sheet');
             sheet.innerHTML = '';
