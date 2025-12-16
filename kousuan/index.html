@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>口算生成器 - YoBox</title>
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text: #1d1d1f;
+            --muted: #6e6e73;
+            --border: #d2d2d7;
+            --accent: #007aff;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Text", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 320px;
+            padding: 20px;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--accent);
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        .title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+        .subtitle { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: -8px; }
+
+        .group { background: var(--card); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 14px; }
+        .label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        select:focus, input[type="number"]:focus { border-color: rgba(0,122,255,0.55); box-shadow: 0 0 0 4px rgba(0,122,255,0.12); }
+
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        .checks { display: flex; flex-direction: column; gap: 10px; }
+        .check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text);
+        }
+        .check input { width: 18px; height: 18px; }
+
+        .actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+        .btn {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .btn-primary { background: var(--text); color: #fff; }
+        .btn-secondary { background: #e9e9ee; color: var(--text); }
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 14mm 14mm 12mm;
+            margin-bottom: 24px;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #111;
+            margin-bottom: 12px;
+        }
+        .sheet-title { font-size: 20px; font-weight: 900; }
+        .meta { font-size: 12px; color: var(--muted); display: flex; gap: 18px; }
+        .line {
+            display: inline-block;
+            border-bottom: 1px solid #333;
+            min-width: 80px;
+            transform: translateY(-1px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+            gap: 10px 18px;
+            padding-top: 6px;
+            font-size: 16px;
+        }
+
+        .q {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .expr { font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
+        .blank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            padding: 0 2px;
+            border-bottom: 2px solid #111;
+            transform: translateY(-1px);
+        }
+        .ans {
+            color: #0b6b2f;
+            font-weight: 800;
+            margin-left: 6px;
+        }
+
+        .answers {
+            margin-top: 18px;
+            page-break-before: always;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        @media (max-width: 860px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.08); }
+            .main { padding: 16px 12px; }
+            .sheet { width: 100%; min-height: auto; padding: 18px; }
+            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media print {
+            body { display: block; background: #fff; }
+            .sidebar { display: none !important; }
+            .main { padding: 0; display: block; overflow: visible; }
+            .sheet { box-shadow: none; border: none; width: 210mm; min-height: 297mm; margin: 0; }
+            .sheet + .sheet { page-break-before: always; }
+            .only-questions .answers { display: none !important; }
+        }
+    </style>
+</head>
+<body class="only-questions">
+    <aside class="sidebar">
+        <a href="../" class="back-link">← 返回 YoBox 大厅</a>
+        <div class="title">➕➖ 口算生成器</div>
+        <div class="subtitle">一年级常用：20 以内加减、凑十破十、填空题。生成后可直接 A4 打印。</div>
+
+        <div class="group">
+            <label class="label">题型</label>
+            <select id="type">
+                <option value="mix">加减混合</option>
+                <option value="add">加法</option>
+                <option value="sub">减法</option>
+                <option value="blank">填空（挖空一个数）</option>
+            </select>
+        </div>
+
+        <div class="group">
+            <div class="row">
+                <div>
+                    <label class="label">范围</label>
+                    <select id="range">
+                        <option value="10">10 以内</option>
+                        <option value="20" selected>20 以内</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label">题量</label>
+                    <select id="count">
+                        <option value="24">24 题</option>
+                        <option value="40" selected>40 题</option>
+                        <option value="60">60 题</option>
+                        <option value="80">80 题</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="group">
+            <label class="label">规则</label>
+            <div class="checks">
+                <label class="check"><input id="includeZero" type="checkbox" checked>允许出现 0</label>
+                <label class="check"><input id="noCarryBorrow" type="checkbox">不进位/不退位（更简单）</label>
+                <label class="check"><input id="showAnswers" type="checkbox">屏幕显示答案（打印默认不含）</label>
+            </div>
+            <div class="hint">提示：打印“含答案”会多出一页答案，方便家长批改。</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-secondary" id="regen">🔄 换一批题目</button>
+            <button class="btn btn-primary" id="printQ">🖨️ 打印题目</button>
+            <button class="btn btn-secondary" id="printQA">🖨️ 打印（含答案）</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div style="display:flex; flex-direction:column; gap: 22px; align-items:center;">
+            <section class="sheet" id="sheetQuestions">
+                <div class="sheet-header">
+                    <div class="sheet-title">口算练习</div>
+                    <div class="meta">
+                        <span>姓名：<span class="line"></span></span>
+                        <span>日期：<span class="line"></span></span>
+                    </div>
+                </div>
+                <div class="grid" id="qGrid"></div>
+            </section>
+
+            <section class="sheet answers" id="sheetAnswers" aria-hidden="true">
+                <div class="sheet-header">
+                    <div class="sheet-title">口算答案</div>
+                    <div class="meta">
+                        <span>姓名：<span class="line"></span></span>
+                        <span>日期：<span class="line"></span></span>
+                    </div>
+                </div>
+                <div class="grid" id="aGrid"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const els = {
+            type: document.getElementById('type'),
+            range: document.getElementById('range'),
+            count: document.getElementById('count'),
+            includeZero: document.getElementById('includeZero'),
+            noCarryBorrow: document.getElementById('noCarryBorrow'),
+            showAnswers: document.getElementById('showAnswers'),
+            regen: document.getElementById('regen'),
+            printQ: document.getElementById('printQ'),
+            printQA: document.getElementById('printQA'),
+            qGrid: document.getElementById('qGrid'),
+            aGrid: document.getElementById('aGrid'),
+            sheetAnswers: document.getElementById('sheetAnswers')
+        };
+
+        let current = [];
+
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function chooseOp(type) {
+            if (type === 'add') return '+';
+            if (type === 'sub') return '−';
+            return Math.random() < 0.5 ? '+' : '−';
+        }
+
+        function fitsNoCarryBorrow(a, b, op) {
+            const aOnes = a % 10;
+            const bOnes = b % 10;
+            if (op === '+') return (aOnes + bOnes) < 10;
+            return aOnes >= bOnes;
+        }
+
+        function makeOne(options) {
+            const max = options.max;
+            const min = options.includeZero ? 0 : 1;
+            const op = chooseOp(options.type);
+            const wantEasy = options.noCarryBorrow && max >= 10;
+
+            for (let tries = 0; tries < 400; tries++) {
+                let a = randInt(min, max);
+                let b = randInt(min, max);
+
+                if (op === '−') {
+                    if (b > a) [a, b] = [b, a];
+                }
+
+                const result = op === '+' ? (a + b) : (a - b);
+                if (result < 0) continue;
+                if (result > max) continue;
+                if (wantEasy && !fitsNoCarryBorrow(a, b, op)) continue;
+
+                if (options.type !== 'blank') {
+                    return { a, b, op, result, blank: null };
+                }
+
+                // blank: randomly blank a/b/result
+                const blankType = randInt(0, 2); // 0:a 1:b 2:result
+                if (blankType === 0 && a === 0 && !options.includeZero) continue;
+                if (blankType === 1 && b === 0 && !options.includeZero) continue;
+                return { a, b, op, result, blank: blankType };
+            }
+
+            // fallback (should be rare)
+            return { a: 1, b: 1, op: '+', result: 2, blank: options.type === 'blank' ? 2 : null };
+        }
+
+        function getCols(count) {
+            if (count <= 24) return 3;
+            if (count <= 40) return 4;
+            if (count <= 60) return 4;
+            return 5;
+        }
+
+        function render() {
+            const count = Number(els.count.value);
+            const cols = getCols(count);
+            els.qGrid.style.setProperty('--cols', String(cols));
+            els.aGrid.style.setProperty('--cols', String(cols));
+
+            els.qGrid.innerHTML = '';
+            els.aGrid.innerHTML = '';
+
+            for (let i = 0; i < current.length; i++) {
+                const item = current[i];
+                els.qGrid.appendChild(renderQuestion(item, i));
+                els.aGrid.appendChild(renderAnswer(item, i));
+            }
+
+            const show = els.showAnswers.checked;
+            els.sheetAnswers.style.display = show ? 'block' : 'none';
+            els.sheetAnswers.setAttribute('aria-hidden', show ? 'false' : 'true');
+        }
+
+        function spanBlank(value) {
+            const span = document.createElement('span');
+            span.className = 'blank';
+            span.textContent = value == null ? '' : String(value);
+            return span;
+        }
+
+        function renderQuestion(item, index) {
+            const div = document.createElement('div');
+            div.className = 'q';
+
+            const expr = document.createElement('span');
+            expr.className = 'expr';
+
+            const aNode = item.blank === 0 ? spanBlank(null) : document.createTextNode(String(item.a));
+            const bNode = item.blank === 1 ? spanBlank(null) : document.createTextNode(String(item.b));
+            const rNode = item.blank === 2 ? spanBlank(null) : spanBlank(null);
+
+            expr.appendChild(document.createTextNode(`${index + 1}. `));
+            expr.appendChild(aNode);
+            expr.appendChild(document.createTextNode(` ${item.op} `));
+            expr.appendChild(bNode);
+            expr.appendChild(document.createTextNode(' = '));
+            expr.appendChild(rNode);
+
+            div.appendChild(expr);
+            return div;
+        }
+
+        function renderAnswer(item, index) {
+            const div = document.createElement('div');
+            div.className = 'q';
+
+            const expr = document.createElement('span');
+            expr.className = 'expr';
+
+            let a = String(item.a);
+            let b = String(item.b);
+            let r = String(item.result);
+
+            if (item.blank === 0) a = '□';
+            if (item.blank === 1) b = '□';
+            if (item.blank === 2) r = '□';
+
+            expr.textContent = `${index + 1}. ${a} ${item.op} ${b} = ${r}`;
+            div.appendChild(expr);
+
+            const ans = document.createElement('span');
+            ans.className = 'ans';
+            if (item.blank === 0) ans.textContent = `a=${item.a}`;
+            else if (item.blank === 1) ans.textContent = `b=${item.b}`;
+            else if (item.blank === 2) ans.textContent = `= ${item.result}`;
+            else ans.textContent = `= ${item.result}`;
+            div.appendChild(ans);
+
+            return div;
+        }
+
+        function generate() {
+            const type = els.type.value;
+            const max = Number(els.range.value);
+            const count = Number(els.count.value);
+            const includeZero = els.includeZero.checked;
+            const noCarryBorrow = els.noCarryBorrow.checked;
+
+            const options = { type, max, includeZero, noCarryBorrow };
+            const next = [];
+            const seen = new Set();
+
+            while (next.length < count) {
+                const item = makeOne(options);
+                const key = `${item.a}${item.op}${item.b}=${item.result}:${item.blank ?? 'n'}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                next.push(item);
+            }
+
+            current = next;
+            render();
+        }
+
+        function printMode(withAnswers) {
+            document.body.classList.toggle('only-questions', !withAnswers);
+            const prev = els.showAnswers.checked;
+            els.showAnswers.checked = withAnswers;
+            render();
+            setTimeout(() => {
+                window.print();
+                els.showAnswers.checked = prev;
+                render();
+                document.body.classList.add('only-questions');
+            }, 0);
+        }
+
+        function wire() {
+            const regenOnChange = () => generate();
+            els.type.addEventListener('change', regenOnChange);
+            els.range.addEventListener('change', regenOnChange);
+            els.count.addEventListener('change', regenOnChange);
+            els.includeZero.addEventListener('change', regenOnChange);
+            els.noCarryBorrow.addEventListener('change', regenOnChange);
+            els.showAnswers.addEventListener('change', render);
+            els.regen.addEventListener('click', generate);
+            els.printQ.addEventListener('click', () => printMode(false));
+            els.printQA.addEventListener('click', () => printMode(true));
+        }
+
+        wire();
+        generate();
+    </script>
+</body>
+</html>
