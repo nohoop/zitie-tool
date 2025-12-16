@@ -89,6 +89,7 @@
             font-weight: 700;
             transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.08s;
             user-select: none;
+            white-space: nowrap;
         }
         .capsule:active { transform: scale(0.98); }
         .capsule.active {
@@ -97,11 +98,12 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.10);
         }
 
-        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* 题型比较多：用 2x2 的 iOS 卡片按钮，避免出现“落单” */
+        .pill-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         .pill {
             padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid rgba(0,0,0,0.10);
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.08);
             background: rgba(118,118,128,0.10);
             color: var(--text);
             font-size: 13px;
@@ -109,9 +111,14 @@
             cursor: pointer;
             transition: transform 0.08s, background 0.2s, border-color 0.2s;
             user-select: none;
+            height: 42px;
         }
         .pill:active { transform: scale(0.98); }
-        .pill.active { background: rgba(0,122,255,0.14); border-color: rgba(0,122,255,0.35); color: #0b3d91; }
+        .pill.active {
+            background: rgba(0,122,255,0.14);
+            border-color: rgba(0,122,255,0.35);
+            color: #0b3d91;
+        }
 
         .visually-hidden {
             position: absolute !important;
@@ -189,10 +196,61 @@
             padding: 28px 20px 40px;
             display: flex;
             justify-content: center;
-            background: var(--bg);
+            background:
+                radial-gradient(1200px circle at 20% -10%, rgba(0,122,255,0.10), transparent 55%),
+                radial-gradient(900px circle at 90% 0%, rgba(52,199,89,0.06), transparent 55%),
+                var(--bg);
         }
 
         .preview-stack { display: flex; flex-direction: column; gap: 22px; align-items: center; }
+
+        .preview-card {
+            width: min(520px, 100%);
+            background: var(--white);
+            border-radius: 24px;
+            padding: 18px 18px 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .preview-kicker {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .preview-title {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .preview-title h2 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+        }
+        .preview-sub {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(118,118,128,0.10);
+            border: 1px solid rgba(0,0,0,0.06);
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .chip .k { font-weight: 900; color: rgba(60,60,67,0.75); }
 
         .sheet {
             width: 210mm;
@@ -209,10 +267,10 @@
             justify-content: space-between;
             align-items: flex-end;
             padding-bottom: 10px;
-            border-bottom: 2px solid #111;
+            border-bottom: 1.8px solid #111;
             margin-bottom: 12px;
         }
-        .sheet-title { font-size: 20px; font-weight: 900; }
+        .sheet-title { font-size: 22px; font-weight: 900; letter-spacing: -0.2px; }
         .meta { font-size: 12px; color: var(--muted); display: flex; gap: 18px; }
         .line {
             display: inline-block;
@@ -230,17 +288,19 @@
         }
 
         .q {
-            display: flex;
-            align-items: baseline;
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr);
             gap: 6px;
+            align-items: baseline;
             white-space: nowrap;
         }
+        .idx { font-variant-numeric: tabular-nums; font-weight: 700; color: #1d1d1f; text-align: right; }
         .expr { font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
         .blank {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 30px;
+            min-width: 44px;
             padding: 0 4px;
             border-bottom: 2px solid #111;
             transform: translateY(-1px);
@@ -304,6 +364,9 @@
             .pill { border-color: rgba(255,255,255,0.12); background: rgba(118,118,128,0.16); }
             .pill.active { background: rgba(41,151,255,0.18); border-color: rgba(41,151,255,0.40); color: #cfe6ff; }
             .btn-secondary { background: rgba(118,118,128,0.22); color: var(--text); }
+            .preview-card { border-color: rgba(255,255,255,0.08); }
+            .chip { background: rgba(118,118,128,0.18); border-color: rgba(255,255,255,0.10); }
+            .chip .k { color: rgba(235,235,245,0.68); }
             .sheet { background: #fff; color: #111; } /* 预览保持纸张感 */
         }
     </style>
@@ -338,8 +401,8 @@
                     <div>
                         <label class="label">范围</label>
                         <div class="capsule-group" id="rangeCaps" role="group" aria-label="范围选择">
-                            <button type="button" class="capsule" data-value="10">10 以内</button>
-                            <button type="button" class="capsule active" data-value="20">20 以内</button>
+                            <button type="button" class="capsule" data-value="10">10以内</button>
+                            <button type="button" class="capsule active" data-value="20">20以内</button>
                         </div>
                         <select id="range" class="visually-hidden" aria-label="范围">
                             <option value="10">10</option>
@@ -349,10 +412,10 @@
                     <div>
                         <label class="label">题量</label>
                         <div class="capsule-group" id="countCaps" role="group" aria-label="题量选择">
-                            <button type="button" class="capsule" data-value="24">24</button>
-                            <button type="button" class="capsule active" data-value="40">40</button>
-                            <button type="button" class="capsule" data-value="60">60</button>
-                            <button type="button" class="capsule" data-value="80">80</button>
+                            <button type="button" class="capsule" data-value="24">24题</button>
+                            <button type="button" class="capsule active" data-value="40">40题</button>
+                            <button type="button" class="capsule" data-value="60">60题</button>
+                            <button type="button" class="capsule" data-value="80">80题</button>
                         </div>
                         <select id="count" class="visually-hidden" aria-label="题量">
                             <option value="24">24</option>
@@ -411,6 +474,20 @@
 
     <main class="main">
         <div class="preview-stack">
+            <div class="preview-card" aria-live="polite">
+                <div class="preview-kicker">Preview</div>
+                <div class="preview-title">
+                    <h2>口算练习预览</h2>
+                    <p class="preview-sub" id="previewNote">已生成 0 题</p>
+                </div>
+                <div class="chips">
+                    <span class="chip"><span class="k">题型</span><span id="chipType">-</span></span>
+                    <span class="chip"><span class="k">范围</span><span id="chipRange">-</span></span>
+                    <span class="chip"><span class="k">题量</span><span id="chipCount">-</span></span>
+                    <span class="chip"><span class="k">规则</span><span id="chipRules">-</span></span>
+                </div>
+            </div>
+
             <section class="sheet" id="sheetQuestions">
                 <div class="sheet-header">
                     <div class="sheet-title">口算练习</div>
@@ -451,7 +528,12 @@
             sheetAnswers: document.getElementById('sheetAnswers'),
             typePills: document.getElementById('typePills'),
             rangeCaps: document.getElementById('rangeCaps'),
-            countCaps: document.getElementById('countCaps')
+            countCaps: document.getElementById('countCaps'),
+            previewNote: document.getElementById('previewNote'),
+            chipType: document.getElementById('chipType'),
+            chipRange: document.getElementById('chipRange'),
+            chipCount: document.getElementById('chipCount'),
+            chipRules: document.getElementById('chipRules')
         };
 
         let current = [];
@@ -532,6 +614,31 @@
             const show = els.showAnswers.checked;
             els.sheetAnswers.style.display = show ? 'block' : 'none';
             els.sheetAnswers.setAttribute('aria-hidden', show ? 'false' : 'true');
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const typeLabel = ({
+                mix: '加减混合',
+                add: '加法',
+                sub: '减法',
+                blank: '填空'
+            })[els.type.value] || els.type.value;
+
+            const rangeLabel = `${els.range.value}以内`;
+            const countLabel = `${els.count.value}题`;
+
+            const rules = [];
+            if (els.includeZero.checked) rules.push('含0');
+            if (els.noCarryBorrow.checked) rules.push('不进/不退');
+            if (rules.length === 0) rules.push('默认');
+
+            if (els.previewNote) els.previewNote.textContent = `已生成 ${current.length} 题`;
+            if (els.chipType) els.chipType.textContent = typeLabel;
+            if (els.chipRange) els.chipRange.textContent = rangeLabel;
+            if (els.chipCount) els.chipCount.textContent = countLabel;
+            if (els.chipRules) els.chipRules.textContent = rules.join(' · ');
         }
 
         function spanBlank(value) {
@@ -545,6 +652,10 @@
             const div = document.createElement('div');
             div.className = 'q';
 
+            const idx = document.createElement('span');
+            idx.className = 'idx';
+            idx.textContent = `${index + 1}.`;
+
             const expr = document.createElement('span');
             expr.className = 'expr';
 
@@ -555,13 +666,13 @@
                 ? (item.blank === 2 ? spanBlank(null) : document.createTextNode(String(item.result)))
                 : spanBlank(null);
 
-            expr.appendChild(document.createTextNode(`${index + 1}. `));
             expr.appendChild(aNode);
             expr.appendChild(document.createTextNode(` ${item.op} `));
             expr.appendChild(bNode);
             expr.appendChild(document.createTextNode(' = '));
             expr.appendChild(rNode);
 
+            div.appendChild(idx);
             div.appendChild(expr);
             return div;
         }
