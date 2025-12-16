@@ -1,37 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
-
     <meta charset="UTF-8">
-    <!-- SEO 核心元数据 -->
-<meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版一年级、二年级、三年级生字字帖生成器，口算题卡，听写助手。无广告，即开即用。">
-<meta name="keywords" content="字帖生成器,人教版生字,一年级练字,田字格打印,小学生作业,口算题卡,免费打印,YoBox">
-<meta name="author" content="YoDad">
-
-<!-- 社交分享卡片 (Open Graph) - 让微信/朋友圈分享更好看 -->
-<meta property="og:title" content="YoBox 呦呦盒子 - 小学生作业神器">
-<meta property="og:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、口算题，A4完美打印。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://zitie-tool.pages.dev/">
-<!-- 建议：以后找个好看的图做封面，替换下面的链接 -->
-<meta property="og:image" content="https://api.iconify.design/package.svg?color=%23007aff"> 
-
-<!-- 移动端优化 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#f5f5f7">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YoBox - 让陪伴更简单</title>
     
+    <!-- SEO & Social -->
+    <meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版生字字帖生成器、口算题卡。无广告，即开即用。">
+    <meta name="keywords" content="字帖生成器,人教版生字,一年级练字,田字格打印,小学生作业,口算题卡,免费打印">
+    <meta property="og:title" content="YoBox - 小学生作业神器">
+    <meta property="og:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、口算题，A4完美打印。">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+
     <style>
         :root {
-            --bg-color: #f5f5f7; /* Apple 经典的浅灰背景 */
+            --bg-color: #f5f5f7;
             --card-bg: #ffffff;
-            --text-primary: #1d1d1f; /* 接近纯黑的深灰 */
+            --text-primary: #1d1d1f;
             --text-secondary: #86868b;
-            --accent-blue: #0071e3; /* Apple 官网蓝 */
+            --accent-blue: #0071e3;
             --transition: cubic-bezier(0.25, 0.1, 0.25, 1);
         }
 
@@ -41,104 +29,117 @@
             background-color: var(--bg-color);
             color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; /* 防止横向滚动 */
         }
 
-        /* 顶部导航 (Nav) */
+        /* 导航栏 */
         nav {
             max-width: 980px; margin: 0 auto; padding: 20px;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .nav-logo { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
-        .nav-logo span { font-size: 24px; }
-        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; transition: color 0.3s; }
-        .nav-link:hover { color: var(--text-primary); }
+        .nav-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px; }
+        .nav-logo span { font-size: 22px; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; }
 
-        /* 英雄区域 (Hero) */
+        /* 英雄区 */
         .hero {
-            text-align: center; padding: 100px 20px 80px;
+            text-align: center; padding: 60px 20px 50px;
             animation: fadeIn 1s ease-out;
         }
         h1 {
-            font-size: 56px; font-weight: 700; letter-spacing: -1.5px; margin: 0 0 15px;
+            font-size: 42px; font-weight: 700; letter-spacing: -1px; margin: 0 0 15px; line-height: 1.1;
             background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .subtitle {
-            font-size: 24px; color: var(--text-secondary); font-weight: 400;
-            max-width: 600px; margin: 0 auto; line-height: 1.4;
+            font-size: 18px; color: var(--text-secondary); font-weight: 400;
+            max-width: 600px; margin: 0 auto; line-height: 1.5;
         }
 
-        /* 便当盒布局 (Bento Grid) */
+        /* 网格布局 */
         .bento-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 两列布局 */
-            grid-template-rows: 360px 240px; /* 第一行高，第二行矮 */
-            gap: 24px;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: 360px 280px;
+            gap: 20px;
             max-width: 980px; margin: 0 auto 60px; padding: 0 20px;
         }
 
-        /* 卡片基础样式 */
+        /* 卡片基础 */
         .card {
             background: var(--card-bg);
-            border-radius: 30px; /* 大圆角 */
-            padding: 40px;
+            border-radius: 24px;
+            padding: 32px;
             position: relative; overflow: hidden;
             text-decoration: none; color: inherit;
             transition: transform 0.4s var(--transition), box-shadow 0.4s var(--transition);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
             display: flex; flex-direction: column;
         }
-        .card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            z-index: 10;
-        }
+        .card:hover { transform: scale(1.01); box-shadow: 0 10px 30px rgba(0,0,0,0.06); z-index: 10; }
 
-        /* 核心卡片 (字帖) - 占据第一行全宽 */
+        /* 核心卡片 (字帖) */
         .card-main {
-            grid-column: 1 / -1; /* 跨越两列 */
+            grid-column: 1 / -1;
             background: white;
             display: flex; flex-direction: row; align-items: center; justify-content: space-between;
         }
-        .card-main .content { z-index: 2; max-width: 50%; }
+        .card-main .content { z-index: 2; max-width: 55%; }
+        
+        /* 修复：PC端的背景图 */
         .card-main .visual {
-            position: absolute; right: -20px; top: 20px; width: 60%; height: 120%;
+            position: absolute; right: -20px; top: 20px; width: 50%; height: 120%;
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="100" fill="%23f5f5f7" rx="5"/><line x1="10" y1="60" x2="90" y2="60" stroke="%23e5e5ea" stroke-dasharray="4"/><line x1="50" y1="10" x2="50" y2="110" stroke="%23e5e5ea" stroke-dasharray="4"/><text x="50" y="75" font-family="KaiTi" font-size="60" text-anchor="middle" fill="%23333">永</text></svg>') no-repeat center;
             opacity: 0.8; transform: rotate(-5deg); transition: transform 0.5s;
+            background-size: contain;
         }
         .card-main:hover .visual { transform: rotate(0deg) scale(1.05); }
 
         /* 次要卡片 */
-        .card-sub {
-            justify-content: space-between;
-            background: #fff;
-        }
+        .card-sub { justify-content: flex-start; gap: 10px; }
         
         /* 文本样式 */
-        .card-tag {
-            font-size: 12px; font-weight: 600; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 10px; display: block;
-        }
-        .card-title { font-size: 32px; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.5px; }
-        .card-desc { font-size: 17px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; }
+        .card-tag { font-size: 11px; font-weight: 600; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .card-title { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .card-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; margin-top: 8px; }
         
         .soon-badge {
-            background: #f5f5f7; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; align-self: flex-start;
+            background: #f5f5f7; color: var(--text-secondary); padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; align-self: flex-start;
         }
 
-        /* 底部 */
-        footer {
-            text-align: center; padding: 60px 20px;
-            border-top: 1px solid #e5e5ea; margin-top: 40px;
-        }
+        footer { text-align: center; padding: 40px 20px; border-top: 1px solid #e5e5ea; margin-top: 40px; }
         .copyright { color: var(--text-secondary); font-size: 12px; }
 
-        /* 移动端适配 */
+        /* 📱 移动端专属优化 (重点) */
         @media (max-width: 768px) {
-            h1 { font-size: 40px; }
-            .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-            .card-main { flex-direction: column; align-items: flex-start; padding-bottom: 200px; } /* 给图片留位置 */
-            .card-main .content { max-width: 100%; }
-            .card-main .visual { width: 80%; right: -10%; top: auto; bottom: -40px; }
+            h1 { font-size: 36px; padding: 0 10px; } /* 防止标题贴边 */
+            .subtitle { font-size: 16px; padding: 0 10px; }
+            
+            .bento-grid { 
+                grid-template-columns: 1fr; /* 单列布局 */
+                grid-template-rows: auto auto auto; /* 高度自适应 */
+                gap: 16px;
+            }
+
+            .card { padding: 24px; min-height: 180px; }
+
+            .card-main { 
+                flex-direction: column; align-items: flex-start; 
+                padding-bottom: 120px; /* 底部给图片留白 */
+            }
+            .card-main .content { max-width: 100%; } /* 文字占满宽度 */
+            
+            /* 移动端调整背景图位置，防止遮挡文字 */
+            .card-main .visual {
+                width: 120px; height: 120px;
+                right: 20px; top: auto; bottom: 20px; /* 移到右下角 */
+                opacity: 0.5; /* 降低不透明度 */
+                transform: rotate(-10deg);
+            }
+            
+            /* 增大点击区域 */
+            .card-title { font-size: 24px; }
+            .card-desc { font-size: 14px; }
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -157,32 +158,31 @@
     </section>
 
     <div class="bento-grid">
-        <!-- 核心功能：字帖 (Card 1) -->
-        <!-- 链接指向 zitie/ -->
+        <!-- 核心功能 -->
         <a href="zitie/" class="card card-main">
             <div class="content">
                 <span class="card-tag">旗舰应用</span>
                 <h2 class="card-title">字帖工坊</h2>
                 <p class="card-desc">内置人教版 1-3 年级全套生字库。支持笔顺分解、智能分卷。A4 纸完美打印。</p>
             </div>
-            <div class="visual"></div> <!-- 装饰图 -->
+            <div class="visual"></div>
         </a>
 
-        <!-- 预告功能：口算 (Card 2) -->
-        <div class="card card-sub" style="opacity: 0.7; cursor: default;">
+        <!-- 预告功能 1 -->
+        <div class="card card-sub" style="opacity: 0.7;">
+            <span class="soon-badge">Coming Soon</span>
             <div>
-                <span class="soon-badge">Coming Soon</span>
-                <div style="font-size: 40px; margin: 20px 0;">🧮</div>
+                <div style="font-size: 32px; margin: 12px 0 4px;">🧮</div>
                 <h2 class="card-title">口算训练</h2>
             </div>
             <p class="card-desc">唯快不破。自动生成 20 以内加减法与混合运算。</p>
         </div>
 
-        <!-- 预告功能：听写 (Card 3) -->
-        <div class="card card-sub" style="opacity: 0.7; cursor: default;">
+        <!-- 预告功能 2 -->
+        <div class="card card-sub" style="opacity: 0.7;">
+            <span class="soon-badge">Coming Soon</span>
             <div>
-                <span class="soon-badge">Coming Soon</span>
-                <div style="font-size: 40px; margin: 20px 0;">🎙️</div>
+                <div style="font-size: 32px; margin: 12px 0 4px;">🎙️</div>
                 <h2 class="card-title">听写助手</h2>
             </div>
             <p class="card-desc">解放双手。手机自动播报课文词语，孩子独立完成。</p>
