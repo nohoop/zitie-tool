@@ -3,37 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一年级生字字帖 (V7.2 坚强版)</title>
+    <title>一年级生字字帖 (阿里极速源 V8.0)</title>
     
-    <!-- 
-      === 核心修改：CDN 源替换 ===
-      由于 jsdelivr 在国内不稳定，我们改用 unpkg (虽然慢但通常能连) 
-      或者尝试使用这一套混合方案。
-    -->
-    <script src="https://unpkg.com/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-    <script src="https://unpkg.com/pinyin-pro@3.18.2/dist/index.min.js"></script>
-
+    <!-- 样式保持精简不变 -->
     <style>
-        /* 样式保持不变，为了节省篇幅，这里复用之前的样式 */
-        :root { --bg-color: #e5e5ea; --sidebar-width: 320px; --accent-color: #007aff; --text-primary: #1c1c1e; --grid-color: #2c8a4c; --grid-dash: #a1dcb6; --text-red: #ff3b30; --text-trace: #d1d1d6; }
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
-        
-        /* 错误遮罩层 */
-        #error-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; padding: 20px; }
-        .error-box { background: #1c1c1e; padding: 30px; border-radius: 12px; max-width: 500px; border: 1px solid #ff3b30; }
-        .error-btn { background: #007aff; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-top:15px; }
-
-        .sidebar { width: var(--sidebar-width); background: rgba(255,255,255,0.98); border-right: 1px solid #c6c6c8; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 100; }
-        h2 { font-size: 18px; margin: 0 0 5px 0; color: var(--text-primary); }
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        .label { font-size: 12px; color: #8e8e93; font-weight: 600; text-transform: uppercase; }
-        input, textarea, select { padding: 8px 10px; border-radius: 8px; border: 1px solid #d1d1d6; font-size: 14px; width: 100%; box-sizing: border-box; font-family: inherit; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-color); }
+        :root { --bg-color: #f0f2f5; --sidebar-width: 320px; --accent-color: #007aff; --text-primary: #1c1c1e; --grid-color: #2c8a4c; --grid-dash: #a1dcb6; --text-red: #ff3b30; --text-trace: #d1d1d6; }
+        body { margin: 0; padding: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
+        h2 { font-size: 18px; margin: 0 0 10px 0; color: var(--text-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .label { font-size: 12px; color: #888; font-weight: 600; }
+        input, textarea, select { padding: 8px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; font-family: inherit; transition: all 0.2s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
         textarea { height: 60px; resize: none; }
         .btn-print { background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: auto; font-size: 16px; }
+        .btn-print:hover { background: #0062cc; }
         
-        .preview-area { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 30px; }
-        .sheet { width: 210mm; height: 296mm; background: white; padding: 15mm 12mm; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .preview-area { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 30px; position: relative; background-color: #f0f2f5; }
+        .sheet { width: 210mm; height: 296mm; background: white; padding: 15mm 12mm; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .sheet-header { height: 15mm; border-bottom: 2px solid var(--grid-color); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 5px; margin-bottom: 5mm; font-family: "KaiTi", "楷体", serif; font-size: 16px; }
         .header-line { border-bottom: 1px solid #000; width: 60px; display: inline-block; }
         .sheet-content { flex: 1; display: flex; flex-direction: column; }
@@ -46,26 +33,28 @@
         .grid-bg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 8%; box-sizing: border-box; }
 
+        #log-overlay { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 20px; border-radius: 20px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 999; }
+        
         @media print {
             @page { size: A4 portrait; margin: 0; }
-            .sidebar, #error-overlay { display: none; }
-            .preview-area { padding: 0; margin: 0; width: 210mm; }
+            .sidebar, #log-overlay { display: none; }
+            .preview-area { padding: 0; margin: 0; width: 210mm; background: white; }
             .sheet { box-shadow: none; margin: 0; page-break-after: always; }
         }
     </style>
+
+    <!-- 1. 核心库：强制使用阿里 npmmirror 源 (国内访问极快) -->
+    <!-- Hanzi Writer -->
+    <script src="https://registry.npmmirror.com/hanzi-writer/3.5.0/files/dist/hanzi-writer.min.js"></script>
+    <!-- Pinyin Pro -->
+    <script src="https://registry.npmmirror.com/pinyin-pro/3.18.2/files/dist/index.min.js"></script>
+
 </head>
 <body>
-
-    <div id="error-overlay">
-        <div class="error-box">
-            <div class="error-title">⚠️ 网络加载失败</div>
-            <div class="error-msg" id="error-text"></div>
-            <button class="error-btn" onclick="location.reload()">重新加载页面</button>
-        </div>
-    </div>
+    <div id="log-overlay">准备就绪</div>
 
     <aside class="sidebar">
-        <h2>字帖生成器 (V7.2)</h2>
+        <h2>字帖生成器 V8.0 (国内版)</h2>
         <div class="control-group">
             <span class="label">教材 / 内容</span>
             <select id="textbook" onchange="loadTextbook()">
@@ -92,43 +81,42 @@
             </select>
         </div>
         <button class="btn-print" onclick="window.print()">🖨️ 立即打印</button>
+        <div style="margin-top:20px; font-size:12px; color:#999; text-align:center;">
+            数据源: 阿里云镜像<br>生成速度取决于本地网络
+        </div>
     </aside>
 
-    <main class="preview-area" id="previewArea">
-        <div style="margin-top:100px; color:#999;">正在连接资源库...</div>
-    </main>
+    <main class="preview-area" id="previewArea"></main>
 
     <script>
-        // 错误处理
-        const errorOverlay = document.getElementById('error-overlay');
-        const errorText = document.getElementById('error-text');
-
-        function showError(msg) {
-            errorOverlay.style.display = 'flex';
-            errorText.innerHTML = msg;
+        // 日志系统
+        const logDiv = document.getElementById('log-overlay');
+        function log(msg) {
+            logDiv.innerText = msg;
+            logDiv.style.opacity = 1;
+            setTimeout(() => logDiv.style.opacity = 0, 2000);
         }
 
-        // 检查库是否加载
-        if (typeof HanziWriter === 'undefined' || typeof pinyinPro === 'undefined') {
-            showError("无法连接到资源库 (unpkg)。<br>可能是您的网络无法访问 GitHub/CDN。<br>建议尝试切换网络或使用 VPN。");
-        }
-
-        // 数据加载优化：使用 unpkg 替代 GitHub Raw
+        // 2. 关键优化：重写数据加载器，强制走阿里源
         window.HanziWriterDefaultOptions = {
             charDataLoader: function(char, onComplete, onErr) {
-                // 尝试从 unpkg 加载数据
-                fetch('https://unpkg.com/hanzi-writer-data@2.0/' + char + '.json')
-                    .then(res => {
-                        if (!res.ok) throw new Error('Failed');
-                        return res.json();
+                // 构造阿里 npmmirror 的数据地址
+                // hanzi-writer-data 版本 2.0.1
+                const url = `https://registry.npmmirror.com/hanzi-writer-data/2.0.1/files/data/${char}.json`;
+                
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network error');
+                        return response.json();
                     })
                     .then(onComplete)
-                    .catch(() => {
-                        // 备用方案：如果 unpkg 挂了，尝试 jsdelivr
-                        fetch('https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + char + '.json')
-                        .then(res => res.json())
-                        .then(onComplete)
-                        .catch(onErr);
+                    .catch(err => {
+                        console.error('阿里源加载失败，尝试备用源...', err);
+                        // 备用：jsdelivr (虽然慢但作为兜底)
+                        fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
+                            .then(res => res.json())
+                            .then(onComplete)
+                            .catch(onErr);
                     });
             }
         };
@@ -139,7 +127,7 @@
         const COLS = 13; 
         let timer;
 
-        window.onload = () => { try { render(); } catch(e){ showError(e.message); } };
+        window.onload = () => { render(); };
         inputStr.addEventListener('input', debouncedRender);
 
         function debouncedRender() {
@@ -153,6 +141,7 @@
         }
 
         async function render() {
+            log('正在生成...');
             const text = inputStr.value.replace(/\s/g, '');
             const chars = Array.from(new Set(text.split('')));
             const mode = document.getElementById('mode').value;
@@ -166,37 +155,29 @@
             for (let p = 0; p < totalPages; p++) {
                 const sheet = document.createElement('div');
                 sheet.className = 'sheet';
-                
                 sheet.innerHTML = `
                     <div class="sheet-header">
                         <div class="header-item"><span>一年级生字练习</span></div>
-                        <div class="header-item">
-                            <span>日期:</span><span class="header-line"></span>
-                            <span>评分:</span><span class="header-line" style="width:40px"></span>
-                        </div>
+                        <div class="header-item"><span>日期:</span><span class="header-line"></span><span>评分:</span><span class="header-line" style="width:40px"></span></div>
                     </div>
                     <div class="sheet-content"></div>
                 `;
-
                 const content = sheet.querySelector('.sheet-content');
-                const start = p * itemsPerPage;
-                const end = Math.min(start + itemsPerPage, chars.length);
-                const pageChars = chars.slice(start, end);
+                const pageChars = chars.slice(p * itemsPerPage, (p + 1) * itemsPerPage);
 
                 for (let char of pageChars) {
                     try {
                         const data = await HanziWriter.loadCharacterData(char);
-                        const block = createCharBlock(char, data, mode);
-                        content.appendChild(block);
-                    } catch (err) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.innerText = `[${char}] 加载失败，请检查网络`;
-                        errorDiv.style.color = 'red'; errorDiv.style.padding='10px';
-                        content.appendChild(errorDiv);
+                        content.appendChild(createCharBlock(char, data, mode));
+                    } catch (e) {
+                        const err = document.createElement('div');
+                        err.innerText = `${char} 加载失败`; err.style.color='red';
+                        content.appendChild(err);
                     }
                 }
                 previewArea.appendChild(sheet);
             }
+            log('生成完毕');
         }
 
         function createCharBlock(char, data, mode) {
@@ -233,10 +214,7 @@
                     }
                 }
                 const cell = createCell(strokes, '', type, -1, false);
-                if(type==='trace' && opacity!==1) {
-                    const path = cell.querySelector('path');
-                    if(path) path.style.opacity = opacity;
-                }
+                if(type==='trace' && opacity!==1) cell.querySelector('path').style.opacity = opacity;
                 row2.appendChild(cell);
             }
             block.appendChild(row2);
@@ -261,4 +239,20 @@
             if(strokes && mode !== 'empty') {
                 let paths = '';
                 strokes.forEach((p, idx) => {
-                    let color = 'var
+                    let color = 'var(--text-primary)';
+                    if(mode==='trace') color='var(--text-trace)';
+                    else if(mode==='step') {
+                        if(idx<step) color='var(--text-trace)';
+                        else if(idx===step) color='var(--text-red)';
+                        else return;
+                    }
+                    paths += `<path d="${p}" fill="${color}"/>`;
+                });
+                hDiv.insertAdjacentHTML('beforeend', `<svg class="char-svg" viewBox="0 0 1024 1024"><g transform="scale(1, -1) translate(0, -900)">${paths}</g></svg>`);
+            }
+            cell.appendChild(hDiv);
+            return cell;
+        }
+    </script>
+</body>
+</html>
