@@ -7,11 +7,14 @@
     <style>
         :root {
             --bg: #f5f5f7;
-            --card: #ffffff;
+            --white: #ffffff;
             --text: #1d1d1f;
             --muted: #6e6e73;
             --border: #d2d2d7;
             --accent: #007aff;
+            --shadow: 0 10px 40px rgba(0,0,0,0.08);
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.06);
+            color-scheme: light dark;
         }
 
         * { box-sizing: border-box; }
@@ -27,14 +30,13 @@
 
         .sidebar {
             width: 320px;
-            padding: 20px;
-            background: rgba(255,255,255,0.88);
+            background: rgba(255,255,255,0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(0,0,0,0.08);
+            border-right: 1px solid rgba(0,0,0,0.10);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            z-index: 100;
         }
 
         .back-link {
@@ -46,36 +48,127 @@
             gap: 6px;
             font-weight: 600;
         }
-        .title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
-        .subtitle { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: -8px; }
 
-        .group { background: var(--card); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 14px; }
-        .label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
-        select, input[type="number"] {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: #fff;
-            font-size: 14px;
-            outline: none;
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
         }
-        select:focus, input[type="number"]:focus { border-color: rgba(0,122,255,0.55); box-shadow: 0 0 0 4px rgba(0,122,255,0.12); }
+        .title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+        .subtitle { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 8px; }
 
-        .row { display: flex; gap: 10px; }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .control-card {
+            background: var(--white);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
+        }
+        .label { display: block; font-size: 12px; font-weight: 700; color: #8a8a8f; margin-bottom: 10px; }
+
+        .capsule-group { display: flex; background: #e5e5ea; padding: 3px; border-radius: 12px; gap: 3px; }
+        .capsule {
+            flex: 1;
+            text-align: center;
+            padding: 8px 10px;
+            font-size: 13px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 700;
+            transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.08s;
+            user-select: none;
+        }
+        .capsule:active { transform: scale(0.98); }
+        .capsule.active {
+            background: #fff;
+            color: #111;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+        }
+
+        .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(118,118,128,0.10);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.08s, background 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+        .pill:active { transform: scale(0.98); }
+        .pill.active { background: rgba(0,122,255,0.14); border-color: rgba(0,122,255,0.35); color: #0b3d91; }
+
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .row { display: flex; gap: 12px; }
         .row > div { flex: 1; }
 
-        .checks { display: flex; flex-direction: column; gap: 10px; }
-        .check {
+        .switch-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            color: var(--text);
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
         }
-        .check input { width: 18px; height: 18px; }
+        .switch-row + .switch-row { border-top: 1px solid rgba(0,0,0,0.06); }
+        .switch-label { font-size: 13px; font-weight: 700; color: var(--text); }
+        .switch-sub { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
 
-        .actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            flex: 0 0 auto;
+        }
+        .switch input { position: absolute; inset: 0; opacity: 0; }
+        .track {
+            position: absolute;
+            inset: 0;
+            background: rgba(120,120,128,0.16);
+            border-radius: 999px;
+            transition: background 0.2s;
+        }
+        .thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            transition: transform 0.2s;
+        }
+        .switch input:checked + .track { background: rgba(0,122,255,0.75); }
+        .switch input:checked + .track .thumb { transform: translateX(20px); }
+        .switch input:focus-visible + .track { outline: 3px solid rgba(0,122,255,0.35); outline-offset: 3px; }
+
+        .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
         .btn {
             width: 100%;
             padding: 12px 12px;
@@ -84,26 +177,31 @@
             cursor: pointer;
             font-size: 15px;
             font-weight: 800;
+            transition: transform 0.08s, box-shadow 0.2s, background 0.2s;
         }
-        .btn-primary { background: var(--text); color: #fff; }
+        .btn:active { transform: scale(0.99); }
+        .btn-primary { background: var(--text); color: #fff; box-shadow: 0 8px 18px rgba(0,0,0,0.18); }
         .btn-secondary { background: #e9e9ee; color: var(--text); }
 
         .main {
             flex: 1;
             overflow-y: auto;
-            padding: 28px 20px;
+            padding: 28px 20px 40px;
             display: flex;
             justify-content: center;
+            background: var(--bg);
         }
+
+        .preview-stack { display: flex; flex-direction: column; gap: 22px; align-items: center; }
 
         .sheet {
             width: 210mm;
             min-height: 297mm;
             background: #fff;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-soft);
             border: 1px solid rgba(0,0,0,0.04);
             padding: 14mm 14mm 12mm;
-            margin-bottom: 24px;
+            border-radius: 16px;
         }
 
         .sheet-header {
@@ -126,7 +224,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
-            gap: 10px 18px;
+            gap: 12px 18px;
             padding-top: 6px;
             font-size: 16px;
         }
@@ -142,8 +240,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 28px;
-            padding: 0 2px;
+            min-width: 30px;
+            padding: 0 4px;
             border-bottom: 2px solid #111;
             transform: translateY(-1px);
         }
@@ -154,7 +252,6 @@
         }
 
         .answers {
-            margin-top: 18px;
             page-break-before: always;
         }
 
@@ -167,78 +264,153 @@
 
         @media (max-width: 860px) {
             body { flex-direction: column; height: auto; overflow: auto; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.08); }
-            .main { padding: 16px 12px; }
-            .sheet { width: 100%; min-height: auto; padding: 18px; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.10); }
+            .main { padding: 18px 12px; }
+            .sheet { width: 100%; min-height: auto; padding: 18px; border-radius: 14px; }
             .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 768px) {
+            .sheet { transform: scale(0.55); transform-origin: top center; margin-bottom: -240mm; }
         }
 
         @media print {
             body { display: block; background: #fff; }
             .sidebar { display: none !important; }
             .main { padding: 0; display: block; overflow: visible; }
-            .sheet { box-shadow: none; border: none; width: 210mm; min-height: 297mm; margin: 0; }
+            .sheet { box-shadow: none; border: none; border-radius: 0; width: 210mm; min-height: 297mm; margin: 0; transform: none !important; }
             .sheet + .sheet { page-break-before: always; }
             .only-questions .answers { display: none !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .capsule, .pill, .btn, .track, .thumb { transition: none !important; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0b0b0c;
+                --white: #161618;
+                --text: #f5f5f7;
+                --muted: #a1a1a6;
+                --border: rgba(255,255,255,0.10);
+                --shadow-soft: 0 6px 24px rgba(0,0,0,0.35);
+            }
+            .sidebar { background: rgba(11,11,12,0.75); border-right-color: rgba(255,255,255,0.10); }
+            .header { border-bottom-color: rgba(255,255,255,0.10); }
+            .control-card { border-color: rgba(255,255,255,0.08); box-shadow: none; }
+            .capsule-group { background: rgba(118,118,128,0.24); }
+            .capsule.active { background: rgba(255,255,255,0.10); color: var(--text); }
+            .pill { border-color: rgba(255,255,255,0.12); background: rgba(118,118,128,0.16); }
+            .pill.active { background: rgba(41,151,255,0.18); border-color: rgba(41,151,255,0.40); color: #cfe6ff; }
+            .btn-secondary { background: rgba(118,118,128,0.22); color: var(--text); }
+            .sheet { background: #fff; color: #111; } /* 预览保持纸张感 */
         }
     </style>
 </head>
 <body class="only-questions">
     <aside class="sidebar">
-        <a href="../" class="back-link">← 返回 YoBox 大厅</a>
-        <div class="title">➕➖ 口算生成器</div>
-        <div class="subtitle">一年级常用：20 以内加减、凑十破十、填空题。生成后可直接 A4 打印。</div>
-
-        <div class="group">
-            <label class="label">题型</label>
-            <select id="type">
-                <option value="mix">加减混合</option>
-                <option value="add">加法</option>
-                <option value="sub">减法</option>
-                <option value="blank">填空（挖空一个数）</option>
-            </select>
+        <div class="header">
+            <a href="../" class="back-link">← 返回 YoBox 大厅</a>
+            <div class="title">➕➖ 口算生成器</div>
+            <div class="subtitle">一年级常用：20 以内加减、凑十破十、填空题。生成后可直接 A4 打印。</div>
         </div>
 
-        <div class="group">
-            <div class="row">
-                <div>
-                    <label class="label">范围</label>
-                    <select id="range">
-                        <option value="10">10 以内</option>
-                        <option value="20" selected>20 以内</option>
-                    </select>
+        <div class="content-area">
+            <div class="control-card">
+                <label class="label">题型</label>
+                <div class="pill-group" id="typePills" role="group" aria-label="题型选择">
+                    <button type="button" class="pill active" data-value="mix">加减混合</button>
+                    <button type="button" class="pill" data-value="add">加法</button>
+                    <button type="button" class="pill" data-value="sub">减法</button>
+                    <button type="button" class="pill" data-value="blank">填空</button>
                 </div>
-                <div>
-                    <label class="label">题量</label>
-                    <select id="count">
-                        <option value="24">24 题</option>
-                        <option value="40" selected>40 题</option>
-                        <option value="60">60 题</option>
-                        <option value="80">80 题</option>
-                    </select>
+                <select id="type" class="visually-hidden" aria-label="题型">
+                    <option value="mix" selected>加减混合</option>
+                    <option value="add">加法</option>
+                    <option value="sub">减法</option>
+                    <option value="blank">填空（挖空一个数）</option>
+                </select>
+            </div>
+
+            <div class="control-card">
+                <div class="row">
+                    <div>
+                        <label class="label">范围</label>
+                        <div class="capsule-group" id="rangeCaps" role="group" aria-label="范围选择">
+                            <button type="button" class="capsule" data-value="10">10 以内</button>
+                            <button type="button" class="capsule active" data-value="20">20 以内</button>
+                        </div>
+                        <select id="range" class="visually-hidden" aria-label="范围">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label">题量</label>
+                        <div class="capsule-group" id="countCaps" role="group" aria-label="题量选择">
+                            <button type="button" class="capsule" data-value="24">24</button>
+                            <button type="button" class="capsule active" data-value="40">40</button>
+                            <button type="button" class="capsule" data-value="60">60</button>
+                            <button type="button" class="capsule" data-value="80">80</button>
+                        </div>
+                        <select id="count" class="visually-hidden" aria-label="题量">
+                            <option value="24">24</option>
+                            <option value="40" selected>40</option>
+                            <option value="60">60</option>
+                            <option value="80">80</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="group">
-            <label class="label">规则</label>
-            <div class="checks">
-                <label class="check"><input id="includeZero" type="checkbox" checked>允许出现 0</label>
-                <label class="check"><input id="noCarryBorrow" type="checkbox">不进位/不退位（更简单）</label>
-                <label class="check"><input id="showAnswers" type="checkbox">屏幕显示答案（打印默认不含）</label>
+            <div class="control-card">
+                <label class="label">规则</label>
+
+                <div class="switch-row">
+                    <div>
+                        <div class="switch-label">允许出现 0</div>
+                        <div class="switch-sub">更贴近真实题目（如 10−10、0+9）。</div>
+                    </div>
+                    <label class="switch" aria-label="允许出现 0">
+                        <input id="includeZero" type="checkbox" checked>
+                        <span class="track"><span class="thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="switch-row">
+                    <div>
+                        <div class="switch-label">不进位 / 不退位</div>
+                        <div class="switch-sub">更适合刚入门（避免 8+7、12−9 这类）。</div>
+                    </div>
+                    <label class="switch" aria-label="不进位不退位">
+                        <input id="noCarryBorrow" type="checkbox">
+                        <span class="track"><span class="thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="switch-row">
+                    <div>
+                        <div class="switch-label">屏幕显示答案</div>
+                        <div class="switch-sub">打印默认不含；选“打印（含答案）”会多一页答案。</div>
+                    </div>
+                    <label class="switch" aria-label="屏幕显示答案">
+                        <input id="showAnswers" type="checkbox">
+                        <span class="track"><span class="thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-secondary" id="regen">🔄 换一批题目</button>
+                    <button class="btn btn-primary" id="printQ">🖨️ 打印题目</button>
+                    <button class="btn btn-secondary" id="printQA">🖨️ 打印（含答案）</button>
+                </div>
             </div>
-            <div class="hint">提示：打印“含答案”会多出一页答案，方便家长批改。</div>
-        </div>
-
-        <div class="actions">
-            <button class="btn btn-secondary" id="regen">🔄 换一批题目</button>
-            <button class="btn btn-primary" id="printQ">🖨️ 打印题目</button>
-            <button class="btn btn-secondary" id="printQA">🖨️ 打印（含答案）</button>
         </div>
     </aside>
 
     <main class="main">
-        <div style="display:flex; flex-direction:column; gap: 22px; align-items:center;">
+        <div class="preview-stack">
             <section class="sheet" id="sheetQuestions">
                 <div class="sheet-header">
                     <div class="sheet-title">口算练习</div>
@@ -276,7 +448,10 @@
             printQA: document.getElementById('printQA'),
             qGrid: document.getElementById('qGrid'),
             aGrid: document.getElementById('aGrid'),
-            sheetAnswers: document.getElementById('sheetAnswers')
+            sheetAnswers: document.getElementById('sheetAnswers'),
+            typePills: document.getElementById('typePills'),
+            rangeCaps: document.getElementById('rangeCaps'),
+            countCaps: document.getElementById('countCaps')
         };
 
         let current = [];
@@ -373,9 +548,12 @@
             const expr = document.createElement('span');
             expr.className = 'expr';
 
-            const aNode = item.blank === 0 ? spanBlank(null) : document.createTextNode(String(item.a));
-            const bNode = item.blank === 1 ? spanBlank(null) : document.createTextNode(String(item.b));
-            const rNode = item.blank === 2 ? spanBlank(null) : spanBlank(null);
+            const isBlankMode = item.blank != null;
+            const aNode = isBlankMode && item.blank === 0 ? spanBlank(null) : document.createTextNode(String(item.a));
+            const bNode = isBlankMode && item.blank === 1 ? spanBlank(null) : document.createTextNode(String(item.b));
+            const rNode = isBlankMode
+                ? (item.blank === 2 ? spanBlank(null) : document.createTextNode(String(item.result)))
+                : spanBlank(null);
 
             expr.appendChild(document.createTextNode(`${index + 1}. `));
             expr.appendChild(aNode);
@@ -455,15 +633,32 @@
 
         function wire() {
             const regenOnChange = () => generate();
-            els.type.addEventListener('change', regenOnChange);
-            els.range.addEventListener('change', regenOnChange);
-            els.count.addEventListener('change', regenOnChange);
             els.includeZero.addEventListener('change', regenOnChange);
             els.noCarryBorrow.addEventListener('change', regenOnChange);
             els.showAnswers.addEventListener('change', render);
             els.regen.addEventListener('click', generate);
             els.printQ.addEventListener('click', () => printMode(false));
             els.printQA.addEventListener('click', () => printMode(true));
+
+            bindChoiceGroup(els.typePills, els.type, regenOnChange);
+            bindChoiceGroup(els.rangeCaps, els.range, regenOnChange);
+            bindChoiceGroup(els.countCaps, els.count, regenOnChange);
+        }
+
+        function bindChoiceGroup(container, selectEl, onChange) {
+            if (!container || !selectEl) return;
+            container.addEventListener('click', (e) => {
+                const btn = e.target && e.target.closest ? e.target.closest('button[data-value]') : null;
+                if (!btn) return;
+                const value = btn.getAttribute('data-value');
+                if (!value) return;
+                if (selectEl.value === value) return;
+                selectEl.value = value;
+                for (const node of container.querySelectorAll('button[data-value]')) {
+                    node.classList.toggle('active', node.getAttribute('data-value') === value);
+                }
+                onChange();
+            });
         }
 
         wire();
