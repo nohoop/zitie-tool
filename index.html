@@ -6,10 +6,10 @@
     <title>YoBox - 让陪伴更简单</title>
     
     <!-- SEO & Social -->
-    <meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版生字字帖生成器、口算题卡。无广告，即开即用。">
-    <meta name="keywords" content="字帖生成器,人教版生字,一年级练字,田字格打印,小学生作业,口算题卡,免费打印">
+    <meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版生字字帖生成器、数位计数器专项练习。无广告，即开即用。">
+    <meta name="keywords" content="字帖生成器,人教版生字,一年级数学,数位计数器,看图写数,田字格打印,小学生作业,免费打印">
     <meta property="og:title" content="YoBox - 小学生作业神器">
-    <meta property="og:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、口算题，A4完美打印。">
+    <meta property="og:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、数学专项练习，A4完美打印。">
     <meta property="og:type" content="website">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 
@@ -32,7 +32,7 @@
             overflow-x: hidden;
         }
 
-        /* 导航栏 (带毛玻璃) */
+        /* 导航栏 */
         nav {
             max-width: 980px; margin: 0 auto; padding: 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -61,12 +61,11 @@
             max-width: 600px; margin: 0 auto; line-height: 1.5;
         }
 
-        /* Bento Grid 布局 (电脑端) */
+        /* Bento Grid 布局 */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            /* 修复：将第二行高度增加到 320px，防止文字截断 */
-            grid-template-rows: 360px 320px;
+            grid-template-rows: 360px 320px; /* 确保下方卡片高度足够 */
             gap: 24px;
             max-width: 980px; margin: 0 auto 60px; padding: 0 20px;
         }
@@ -74,13 +73,13 @@
         /* 卡片通用样式 */
         .card {
             background: var(--card-bg);
-            border-radius: 28px; /* 更圆润的角 */
+            border-radius: 28px;
             padding: 40px;
             position: relative; overflow: hidden;
             text-decoration: none; color: inherit;
             transition: transform 0.4s var(--transition), box-shadow 0.4s var(--transition);
             box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-            border: 1px solid rgba(0,0,0,0.02); /* 微边框增加质感 */
+            border: 1px solid rgba(0,0,0,0.02);
             display: flex; flex-direction: column;
         }
         .card:hover {
@@ -105,11 +104,11 @@
         }
         .card-main:hover .visual { transform: rotate(0deg) scale(1.05); }
 
-        /* 次要卡片 (口算/听写) */
+        /* 次要卡片 */
         .card-sub {
-            justify-content: flex-start; /* 修复：让内容自然从上到下 */
+            justify-content: flex-start;
             background: #fff;
-            gap: 15px; /* 增加内部间距 */
+            gap: 15px;
         }
         
         /* 文本样式 */
@@ -117,7 +116,7 @@
         .card-title { font-size: 32px; font-weight: 700; margin: 0; letter-spacing: -0.8px; }
         .card-desc { 
             font-size: 17px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; 
-            margin-top: 5px; /* 修复：给描述文字顶部留一点空间 */
+            margin-top: 5px; 
         }
         
         .soon-badge {
@@ -128,12 +127,11 @@
         footer { text-align: center; padding: 40px 20px; margin-top: 40px; }
         .copyright { color: var(--text-secondary); font-size: 12px; opacity: 0.7; }
 
-        /* 📱 移动端专属优化 (核心重构) */
+        /* 📱 移动端适配 */
         @media (max-width: 768px) {
             h1 { font-size: 36px; padding: 0 10px; }
             .subtitle { font-size: 16px; padding: 0 10px; }
             
-            /* 1. 布局改为单列，且取消固定高度 */
             .bento-grid { 
                 grid-template-columns: 1fr; 
                 grid-template-rows: auto; 
@@ -142,33 +140,23 @@
 
             .card { padding: 24px; min-height: auto; }
 
-            /* 2. 字帖卡片重构：左文右图 (iOS Widget 风格) */
+            /* 字帖卡片：左文右图 */
             .card-main { 
-                flex-direction: row; /* 强制横向排列 */
+                flex-direction: row; 
                 align-items: center; 
                 justify-content: space-between;
-                min-height: 160px; /* 紧凑高度 */
+                min-height: 160px;
             }
-            
-            .card-main .content { 
-                max-width: 60%; /* 文字占左侧 60% */
-            }
-            
+            .card-main .content { max-width: 60%; }
             .card-main .visual {
-                position: relative; /* 不再绝对定位，而是相对布局 */
-                right: auto; top: auto;
-                width: 35%; height: 100px; /* 限制图片大小 */
-                opacity: 1; 
+                position: relative; right: auto; top: auto;
+                width: 35%; height: 100px;
+                opacity: 1; margin-left: 10px;
                 transform: rotate(-5deg);
-                margin-left: 10px;
             }
 
-            /* 3. 次要卡片优化 */
-            .card-sub {
-                min-height: 180px; /* 给足够的高度放文字 */
-            }
-            
-            /* 字体微调 */
+            /* 次要卡片 */
+            .card-sub { min-height: 180px; }
             .card-title { font-size: 24px; }
             .card-desc { font-size: 14px; }
         }
@@ -199,18 +187,19 @@
             <div class="visual"></div>
         </a>
 
-        <!-- 预告功能：口算 -->
-        <div class="card card-sub" style="opacity: 0.7;">
-            <span class="soon-badge">Coming Soon</span>
+        <!-- 第二功能：数位计数器 (已上线) -->
+        <a href="math/" class="card card-sub">
+            <!-- 红色 NEW 标签 -->
+            <span class="soon-badge" style="background:#ff3b30; color:white;">NEW</span>
             <div>
                 <div style="font-size: 36px; margin: 15px 0 10px;">🧮</div>
-                <h2 class="card-title">口算训练</h2>
+                <h2 class="card-title">数位计数器</h2>
             </div>
-            <p class="card-desc">唯快不破。自动生成 20 以内加减法与混合运算，每日一练。</p>
-        </div>
+            <p class="card-desc">11-20 专项突破。看图写数、看数画珠。搞懂“个位”与“十位”的关系。</p>
+        </a>
 
         <!-- 预告功能：听写 -->
-        <div class="card card-sub" style="opacity: 0.7;">
+        <div class="card card-sub" style="opacity: 0.7; cursor: default;">
             <span class="soon-badge">Coming Soon</span>
             <div>
                 <div style="font-size: 36px; margin: 15px 0 10px;">🎙️</div>
