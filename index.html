@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一年级生字字帖 (阿里极速源 V8.0)</title>
+    <title>一年级生字字帖 (饿了么极速版 V9.0)</title>
     
-    <!-- 样式保持精简不变 -->
     <style>
-        :root { --bg-color: #f0f2f5; --sidebar-width: 320px; --accent-color: #007aff; --text-primary: #1c1c1e; --grid-color: #2c8a4c; --grid-dash: #a1dcb6; --text-red: #ff3b30; --text-trace: #d1d1d6; }
-        body { margin: 0; padding: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,0.02); }
-        h2 { font-size: 18px; margin: 0 0 10px 0; color: var(--text-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        .control-group { display: flex; flex-direction: column; gap: 6px; }
-        .label { font-size: 12px; color: #888; font-weight: 600; }
-        input, textarea, select { padding: 8px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; font-family: inherit; transition: all 0.2s; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
-        textarea { height: 60px; resize: none; }
-        .btn-print { background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: auto; font-size: 16px; }
-        .btn-print:hover { background: #0062cc; }
+        :root { --bg-color: #f5f7fa; --sidebar-width: 300px; --accent-color: #007aff; --text-primary: #333; --grid-color: #2c8a4c; --grid-dash: #a1dcb6; --text-red: #ff3b30; --text-trace: #d1d1d6; }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
         
-        .preview-area { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 30px; position: relative; background-color: #f0f2f5; }
-        .sheet { width: 210mm; height: 296mm; background: white; padding: 15mm 12mm; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        /* 侧边栏 */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.03); }
+        h2 { font-size: 18px; margin: 0; color: var(--text-primary); border-left: 4px solid var(--accent-color); padding-left: 10px; line-height: 1; }
+        .control-group { display: flex; flex-direction: column; gap: 6px; }
+        .label { font-size: 12px; color: #888; font-weight: bold; }
+        input, textarea, select { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; font-family: inherit; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        textarea { height: 80px; resize: none; }
+        .btn-print { background: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: auto; font-size: 16px; transition: background 0.2s; }
+        .btn-print:hover { background: #0056b3; }
+        
+        /* 预览区 */
+        .preview-area { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 30px; position: relative; }
+        .sheet { width: 210mm; height: 296mm; background: white; padding: 15mm 12mm; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .sheet-header { height: 15mm; border-bottom: 2px solid var(--grid-color); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 5px; margin-bottom: 5mm; font-family: "KaiTi", "楷体", serif; font-size: 16px; }
         .header-line { border-bottom: 1px solid #000; width: 60px; display: inline-block; }
         .sheet-content { flex: 1; display: flex; flex-direction: column; }
+        
         .char-block { margin-bottom: 4mm; break-inside: avoid; }
         .row { display: flex; height: 18mm; border-left: 1px solid var(--grid-color); }
         .row.practice { border-top: none; }
@@ -33,28 +36,32 @@
         .grid-bg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 8%; box-sizing: border-box; }
 
-        #log-overlay { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 20px; border-radius: 20px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 999; }
-        
+        /* 状态提示 */
+        #status-bar {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 24px;
+            border-radius: 30px; font-size: 14px; z-index: 999;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+
         @media print {
             @page { size: A4 portrait; margin: 0; }
-            .sidebar, #log-overlay { display: none; }
+            .sidebar, #status-bar { display: none; }
             .preview-area { padding: 0; margin: 0; width: 210mm; background: white; }
             .sheet { box-shadow: none; margin: 0; page-break-after: always; }
         }
     </style>
 
-    <!-- 1. 核心库：强制使用阿里 npmmirror 源 (国内访问极快) -->
-    <!-- Hanzi Writer -->
-    <script src="https://registry.npmmirror.com/hanzi-writer/3.5.0/files/dist/hanzi-writer.min.js"></script>
-    <!-- Pinyin Pro -->
-    <script src="https://registry.npmmirror.com/pinyin-pro/3.18.2/files/dist/index.min.js"></script>
+    <!-- 1. 核心库：使用“饿了么” CDN (国内极速) -->
+    <script src="https://npm.elemecdn.com/hanzi-writer@3.5.0/dist/hanzi-writer.min.js"></script>
+    <script src="https://npm.elemecdn.com/pinyin-pro@3.18.2/dist/index.min.js"></script>
 
 </head>
 <body>
-    <div id="log-overlay">准备就绪</div>
+    <div id="status-bar">加载中...</div>
 
     <aside class="sidebar">
-        <h2>字帖生成器 V8.0 (国内版)</h2>
+        <h2>字帖生成器 V9.0</h2>
         <div class="control-group">
             <span class="label">教材 / 内容</span>
             <select id="textbook" onchange="loadTextbook()">
@@ -81,43 +88,44 @@
             </select>
         </div>
         <button class="btn-print" onclick="window.print()">🖨️ 立即打印</button>
-        <div style="margin-top:20px; font-size:12px; color:#999; text-align:center;">
-            数据源: 阿里云镜像<br>生成速度取决于本地网络
+        <div style="font-size:12px; color:#999; text-align:center; margin-top:10px;">
+            CDN: npm.elemecdn.com
         </div>
     </aside>
 
     <main class="preview-area" id="previewArea"></main>
 
     <script>
-        // 日志系统
-        const logDiv = document.getElementById('log-overlay');
-        function log(msg) {
-            logDiv.innerText = msg;
-            logDiv.style.opacity = 1;
-            setTimeout(() => logDiv.style.opacity = 0, 2000);
+        const statusBar = document.getElementById('status-bar');
+        function showStatus(msg, isError=false) {
+            statusBar.innerText = msg;
+            statusBar.style.opacity = 1;
+            statusBar.style.background = isError ? '#ff3b30' : 'rgba(0,0,0,0.8)';
+            if(!isError) setTimeout(() => statusBar.style.opacity = 0, 1500);
         }
 
-        // 2. 关键优化：重写数据加载器，强制走阿里源
+        // 2. 检查库加载情况
+        window.onload = () => {
+            if (typeof HanziWriter === 'undefined' || typeof pinyinPro === 'undefined') {
+                showStatus('❌ 错误：核心库加载失败，请刷新重试', true);
+                // 在页面上也显示大字错误
+                document.getElementById('previewArea').innerHTML = '<div style="color:red; margin-top:50px;">核心组件加载失败。<br>请检查网络，或稍后刷新重试。</div>';
+                return;
+            }
+            render();
+        };
+
+        // 3. 配置数据加载器 (饿了么源)
         window.HanziWriterDefaultOptions = {
             charDataLoader: function(char, onComplete, onErr) {
-                // 构造阿里 npmmirror 的数据地址
-                // hanzi-writer-data 版本 2.0.1
-                const url = `https://registry.npmmirror.com/hanzi-writer-data/2.0.1/files/data/${char}.json`;
-                
-                fetch(url)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network error');
-                        return response.json();
+                // 使用 elemecdn 加载数据，速度极快
+                fetch(`https://npm.elemecdn.com/hanzi-writer-data@2.0/${char}.json`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network Error');
+                        return res.json();
                     })
                     .then(onComplete)
-                    .catch(err => {
-                        console.error('阿里源加载失败，尝试备用源...', err);
-                        // 备用：jsdelivr (虽然慢但作为兜底)
-                        fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`)
-                            .then(res => res.json())
-                            .then(onComplete)
-                            .catch(onErr);
-                    });
+                    .catch(onErr);
             }
         };
 
@@ -127,7 +135,6 @@
         const COLS = 13; 
         let timer;
 
-        window.onload = () => { render(); };
         inputStr.addEventListener('input', debouncedRender);
 
         function debouncedRender() {
@@ -141,7 +148,7 @@
         }
 
         async function render() {
-            log('正在生成...');
+            showStatus('正在生成...');
             const text = inputStr.value.replace(/\s/g, '');
             const chars = Array.from(new Set(text.split('')));
             const mode = document.getElementById('mode').value;
@@ -171,13 +178,13 @@
                         content.appendChild(createCharBlock(char, data, mode));
                     } catch (e) {
                         const err = document.createElement('div');
-                        err.innerText = `${char} 加载失败`; err.style.color='red';
+                        err.innerText = `${char} 数据加载失败`; err.style.color='#999'; err.style.padding='10px';
                         content.appendChild(err);
                     }
                 }
                 previewArea.appendChild(sheet);
             }
-            log('生成完毕');
+            showStatus('生成完毕');
         }
 
         function createCharBlock(char, data, mode) {
