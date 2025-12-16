@@ -3,108 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YoBox 呦呦盒子 - 小学生作业神器</title>
+    <title>YoBox - 让陪伴更简单</title>
+    
     <style>
         :root {
-            --bg: #f5f5f7; --card: #ffffff; 
-            --text: #1d1d1f; --sub: #86868b; --blue: #007aff;
-        }
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); }
-        
-        /* 头部 */
-        header { text-align: center; padding: 80px 20px 50px; }
-        .logo { font-size: 64px; margin-bottom: 10px; display: block; }
-        h1 { font-size: 36px; margin: 0 0 10px; font-weight: 700; letter-spacing: -0.5px; }
-        p { font-size: 18px; color: var(--sub); font-weight: 400; max-width: 600px; margin: 0 auto; line-height: 1.6; }
-        .badge { background: #e5e5ea; color: var(--text); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-block; margin-top: 15px; }
-
-        /* 网格布局 */
-        .grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px; max-width: 1000px; margin: 0 auto; padding: 20px;
+            --bg-color: #f5f5f7; /* Apple 经典的浅灰背景 */
+            --card-bg: #ffffff;
+            --text-primary: #1d1d1f; /* 接近纯黑的深灰 */
+            --text-secondary: #86868b;
+            --accent-blue: #0071e3; /* Apple 官网蓝 */
+            --transition: cubic-bezier(0.25, 0.1, 0.25, 1);
         }
 
-        /* 卡片样式 */
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 顶部导航 (Nav) */
+        nav {
+            max-width: 980px; margin: 0 auto; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-logo { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+        .nav-logo span { font-size: 24px; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; transition: color 0.3s; }
+        .nav-link:hover { color: var(--text-primary); }
+
+        /* 英雄区域 (Hero) */
+        .hero {
+            text-align: center; padding: 100px 20px 80px;
+            animation: fadeIn 1s ease-out;
+        }
+        h1 {
+            font-size: 56px; font-weight: 700; letter-spacing: -1.5px; margin: 0 0 15px;
+            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 24px; color: var(--text-secondary); font-weight: 400;
+            max-width: 600px; margin: 0 auto; line-height: 1.4;
+        }
+
+        /* 便当盒布局 (Bento Grid) */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 两列布局 */
+            grid-template-rows: 360px 240px; /* 第一行高，第二行矮 */
+            gap: 24px;
+            max-width: 980px; margin: 0 auto 60px; padding: 0 20px;
+        }
+
+        /* 卡片基础样式 */
         .card {
-            background: var(--card); border-radius: 24px; padding: 32px;
-            text-decoration: none; color: inherit; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.04);
-            display: flex; flex-direction: column; height: 220px; justify-content: space-between;
+            background: var(--card-bg);
+            border-radius: 30px; /* 大圆角 */
+            padding: 40px;
             position: relative; overflow: hidden;
+            text-decoration: none; color: inherit;
+            transition: transform 0.4s var(--transition), box-shadow 0.4s var(--transition);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column;
         }
-        .card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
-        
-        .icon { font-size: 42px; margin-bottom: 15px; background: #f5f5f7; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 18px; }
-        .title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
-        .desc { font-size: 14px; color: var(--sub); line-height: 1.5; }
-        
-        .arrow { 
-            width: 36px; height: 36px; background: var(--blue); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; color: white;
-            align-self: flex-end; opacity: 0; transform: translateX(-10px); transition: 0.3s;
-            position: absolute; bottom: 32px; right: 32px;
-        }
-        .card:hover .arrow { opacity: 1; transform: translateX(0); }
-
-        /* 未开发卡片 */
-        .card.soon { opacity: 0.7; cursor: default; filter: grayscale(0.8); }
-        .card.soon:hover { transform: none; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        .tag-soon { 
-            position: absolute; top: 24px; right: 24px; 
-            background: #f2f2f7; color: var(--sub); padding: 6px 12px; 
-            border-radius: 12px; font-size: 12px; font-weight: 600; 
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            z-index: 10;
         }
 
-        footer { text-align: center; padding: 80px 20px; color: var(--sub); font-size: 13px; opacity: 0.8; }
+        /* 核心卡片 (字帖) - 占据第一行全宽 */
+        .card-main {
+            grid-column: 1 / -1; /* 跨越两列 */
+            background: white;
+            display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+        }
+        .card-main .content { z-index: 2; max-width: 50%; }
+        .card-main .visual {
+            position: absolute; right: -20px; top: 20px; width: 60%; height: 120%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="100" fill="%23f5f5f7" rx="5"/><line x1="10" y1="60" x2="90" y2="60" stroke="%23e5e5ea" stroke-dasharray="4"/><line x1="50" y1="10" x2="50" y2="110" stroke="%23e5e5ea" stroke-dasharray="4"/><text x="50" y="75" font-family="KaiTi" font-size="60" text-anchor="middle" fill="%23333">永</text></svg>') no-repeat center;
+            opacity: 0.8; transform: rotate(-5deg); transition: transform 0.5s;
+        }
+        .card-main:hover .visual { transform: rotate(0deg) scale(1.05); }
+
+        /* 次要卡片 */
+        .card-sub {
+            justify-content: space-between;
+            background: #fff;
+        }
+        
+        /* 文本样式 */
+        .card-tag {
+            font-size: 12px; font-weight: 600; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 10px; display: block;
+        }
+        .card-title { font-size: 32px; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.5px; }
+        .card-desc { font-size: 17px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; }
+        
+        .soon-badge {
+            background: #f5f5f7; color: var(--text-secondary); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; align-self: flex-start;
+        }
+
+        /* 底部 */
+        footer {
+            text-align: center; padding: 60px 20px;
+            border-top: 1px solid #e5e5ea; margin-top: 40px;
+        }
+        .copyright { color: var(--text-secondary); font-size: 12px; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            h1 { font-size: 40px; }
+            .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+            .card-main { flex-direction: column; align-items: flex-start; padding-bottom: 200px; } /* 给图片留位置 */
+            .card-main .content { max-width: 100%; }
+            .card-main .visual { width: 80%; right: -10%; top: auto; bottom: -40px; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <header>
-        <span class="logo">📦</span>
-        <h1>YoBox 呦呦盒子</h1>
-        <p>Yo爸为 Yoyo 定制的私房学习工具箱。<br>不搞虚的，点开即用，永久免费。</p>
-        <div class="badge">已收录 1 款工具 · 持续更新中</div>
-    </header>
+    <nav>
+        <div class="nav-logo"><span>📦</span> YoBox</div>
+        <a href="mailto:godblesswka@gmail.com" class="nav-link">联系开发者</a>
+    </nav>
 
-    <div class="grid">
-        <!-- 工具 1：字帖 (核心) -->
-        <!-- 链接指向 zitie/ 目录 -->
-        <a href="zitie/" class="card">
-            <div>
-                <div class="icon">✏️</div>
-                <div class="title">生字字帖工坊</div>
-                <div class="desc">人教版 1-3 年级全同步。支持笔顺分解、描红、拼音自动标注。A4 完美打印。</div>
+    <section class="hero">
+        <h1>让陪伴，更简单。</h1>
+        <div class="subtitle">YoBox，为小学生家长设计的私房工具箱。<br>没有广告，只有好用的工具。</div>
+    </section>
+
+    <div class="bento-grid">
+        <!-- 核心功能：字帖 (Card 1) -->
+        <!-- 链接指向 zitie/ -->
+        <a href="zitie/" class="card card-main">
+            <div class="content">
+                <span class="card-tag">旗舰应用</span>
+                <h2 class="card-title">字帖工坊</h2>
+                <p class="card-desc">内置人教版 1-3 年级全套生字库。支持笔顺分解、智能分卷。A4 纸完美打印。</p>
             </div>
-            <div class="arrow">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </div>
+            <div class="visual"></div> <!-- 装饰图 -->
         </a>
 
-        <!-- 工具 2：口算 (画饼) -->
-        <div class="card soon">
-            <span class="tag-soon">开发中</span>
+        <!-- 预告功能：口算 (Card 2) -->
+        <div class="card card-sub" style="opacity: 0.7; cursor: default;">
             <div>
-                <div class="icon">🧮</div>
-                <div class="title">口算题卡生成器</div>
-                <div class="desc">20以内加减法、进位退位、混合运算。一键生成每日练习题。</div>
+                <span class="soon-badge">Coming Soon</span>
+                <div style="font-size: 40px; margin: 20px 0;">🧮</div>
+                <h2 class="card-title">口算训练</h2>
             </div>
+            <p class="card-desc">唯快不破。自动生成 20 以内加减法与混合运算。</p>
         </div>
 
-        <!-- 工具 3：听写 (画饼) -->
-        <div class="card soon">
-            <span class="tag-soon">计划中</span>
+        <!-- 预告功能：听写 (Card 3) -->
+        <div class="card card-sub" style="opacity: 0.7; cursor: default;">
             <div>
-                <div class="icon">🎙️</div>
-                <div class="title">语音听写助手</div>
-                <div class="desc">不用妈妈念。手机自动播报课文生字，孩子跟着写，解放家长。</div>
+                <span class="soon-badge">Coming Soon</span>
+                <div style="font-size: 40px; margin: 20px 0;">🎙️</div>
+                <h2 class="card-title">听写助手</h2>
             </div>
+            <p class="card-desc">解放双手。手机自动播报课文词语，孩子独立完成。</p>
         </div>
     </div>
 
     <footer>
-        <p>Made with ❤️ by YoDad</p>
-        <p>© 2024 YoBox | 为小学生家长而生</p>
+        <p class="copyright">Designed by YoDad in 2024. Built for Yoyo.</p>
     </footer>
 
 </body>
