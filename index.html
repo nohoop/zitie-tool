@@ -29,17 +29,22 @@
             background-color: var(--bg-color);
             color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden; /* 防止横向滚动 */
+            overflow-x: hidden;
         }
 
-        /* 导航栏 */
+        /* 导航栏 (带毛玻璃) */
         nav {
             max-width: 980px; margin: 0 auto; padding: 20px;
             display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(245, 245, 247, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         .nav-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px; }
         .nav-logo span { font-size: 22px; }
-        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; transition: color 0.3s; }
+        .nav-link:hover { color: var(--text-primary); }
 
         /* 英雄区 */
         .hero {
@@ -47,38 +52,44 @@
             animation: fadeIn 1s ease-out;
         }
         h1 {
-            font-size: 42px; font-weight: 700; letter-spacing: -1px; margin: 0 0 15px; line-height: 1.1;
+            font-size: 48px; font-weight: 700; letter-spacing: -1.5px; margin: 0 0 12px; line-height: 1.1;
             background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .subtitle {
-            font-size: 18px; color: var(--text-secondary); font-weight: 400;
+            font-size: 20px; color: var(--text-secondary); font-weight: 400;
             max-width: 600px; margin: 0 auto; line-height: 1.5;
         }
 
-        /* 网格布局 */
+        /* Bento Grid 布局 (电脑端) */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: 360px 280px;
-            gap: 20px;
+            /* 修复：将第二行高度增加到 320px，防止文字截断 */
+            grid-template-rows: 360px 320px;
+            gap: 24px;
             max-width: 980px; margin: 0 auto 60px; padding: 0 20px;
         }
 
-        /* 卡片基础 */
+        /* 卡片通用样式 */
         .card {
             background: var(--card-bg);
-            border-radius: 24px;
-            padding: 32px;
+            border-radius: 28px; /* 更圆润的角 */
+            padding: 40px;
             position: relative; overflow: hidden;
             text-decoration: none; color: inherit;
             transition: transform 0.4s var(--transition), box-shadow 0.4s var(--transition);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.02); /* 微边框增加质感 */
             display: flex; flex-direction: column;
         }
-        .card:hover { transform: scale(1.01); box-shadow: 0 10px 30px rgba(0,0,0,0.06); z-index: 10; }
+        .card:hover {
+            transform: scale(1.015);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            z-index: 10;
+        }
 
-        /* 核心卡片 (字帖) */
+        /* 主卡片 (字帖) */
         .card-main {
             grid-column: 1 / -1;
             background: white;
@@ -86,58 +97,78 @@
         }
         .card-main .content { z-index: 2; max-width: 55%; }
         
-        /* 修复：PC端的背景图 */
         .card-main .visual {
-            position: absolute; right: -20px; top: 20px; width: 50%; height: 120%;
+            position: absolute; right: -20px; top: 20px; width: 55%; height: 120%;
             background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="100" fill="%23f5f5f7" rx="5"/><line x1="10" y1="60" x2="90" y2="60" stroke="%23e5e5ea" stroke-dasharray="4"/><line x1="50" y1="10" x2="50" y2="110" stroke="%23e5e5ea" stroke-dasharray="4"/><text x="50" y="75" font-family="KaiTi" font-size="60" text-anchor="middle" fill="%23333">永</text></svg>') no-repeat center;
-            opacity: 0.8; transform: rotate(-5deg); transition: transform 0.5s;
+            opacity: 0.9; transform: rotate(-5deg); transition: transform 0.5s;
             background-size: contain;
         }
         .card-main:hover .visual { transform: rotate(0deg) scale(1.05); }
 
-        /* 次要卡片 */
-        .card-sub { justify-content: flex-start; gap: 10px; }
+        /* 次要卡片 (口算/听写) */
+        .card-sub {
+            justify-content: flex-start; /* 修复：让内容自然从上到下 */
+            background: #fff;
+            gap: 15px; /* 增加内部间距 */
+        }
         
         /* 文本样式 */
-        .card-tag { font-size: 11px; font-weight: 600; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; display: block; }
-        .card-title { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
-        .card-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; margin-top: 8px; }
+        .card-tag { font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 0.5px; }
+        .card-title { font-size: 32px; font-weight: 700; margin: 0; letter-spacing: -0.8px; }
+        .card-desc { 
+            font-size: 17px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; 
+            margin-top: 5px; /* 修复：给描述文字顶部留一点空间 */
+        }
         
         .soon-badge {
-            background: #f5f5f7; color: var(--text-secondary); padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; align-self: flex-start;
+            background: #f5f5f7; color: var(--text-secondary); padding: 6px 12px; 
+            border-radius: 20px; font-size: 12px; font-weight: 600; align-self: flex-start;
         }
 
-        footer { text-align: center; padding: 40px 20px; border-top: 1px solid #e5e5ea; margin-top: 40px; }
-        .copyright { color: var(--text-secondary); font-size: 12px; }
+        footer { text-align: center; padding: 40px 20px; margin-top: 40px; }
+        .copyright { color: var(--text-secondary); font-size: 12px; opacity: 0.7; }
 
-        /* 📱 移动端专属优化 (重点) */
+        /* 📱 移动端专属优化 (核心重构) */
         @media (max-width: 768px) {
-            h1 { font-size: 36px; padding: 0 10px; } /* 防止标题贴边 */
+            h1 { font-size: 36px; padding: 0 10px; }
             .subtitle { font-size: 16px; padding: 0 10px; }
             
+            /* 1. 布局改为单列，且取消固定高度 */
             .bento-grid { 
-                grid-template-columns: 1fr; /* 单列布局 */
-                grid-template-rows: auto auto auto; /* 高度自适应 */
+                grid-template-columns: 1fr; 
+                grid-template-rows: auto; 
                 gap: 16px;
             }
 
-            .card { padding: 24px; min-height: 180px; }
+            .card { padding: 24px; min-height: auto; }
 
+            /* 2. 字帖卡片重构：左文右图 (iOS Widget 风格) */
             .card-main { 
-                flex-direction: column; align-items: flex-start; 
-                padding-bottom: 120px; /* 底部给图片留白 */
+                flex-direction: row; /* 强制横向排列 */
+                align-items: center; 
+                justify-content: space-between;
+                min-height: 160px; /* 紧凑高度 */
             }
-            .card-main .content { max-width: 100%; } /* 文字占满宽度 */
             
-            /* 移动端调整背景图位置，防止遮挡文字 */
+            .card-main .content { 
+                max-width: 60%; /* 文字占左侧 60% */
+            }
+            
             .card-main .visual {
-                width: 120px; height: 120px;
-                right: 20px; top: auto; bottom: 20px; /* 移到右下角 */
-                opacity: 0.5; /* 降低不透明度 */
-                transform: rotate(-10deg);
+                position: relative; /* 不再绝对定位，而是相对布局 */
+                right: auto; top: auto;
+                width: 35%; height: 100px; /* 限制图片大小 */
+                opacity: 1; 
+                transform: rotate(-5deg);
+                margin-left: 10px;
+            }
+
+            /* 3. 次要卡片优化 */
+            .card-sub {
+                min-height: 180px; /* 给足够的高度放文字 */
             }
             
-            /* 增大点击区域 */
+            /* 字体微调 */
             .card-title { font-size: 24px; }
             .card-desc { font-size: 14px; }
         }
@@ -158,7 +189,7 @@
     </section>
 
     <div class="bento-grid">
-        <!-- 核心功能 -->
+        <!-- 核心功能：字帖 -->
         <a href="zitie/" class="card card-main">
             <div class="content">
                 <span class="card-tag">旗舰应用</span>
@@ -168,21 +199,21 @@
             <div class="visual"></div>
         </a>
 
-        <!-- 预告功能 1 -->
+        <!-- 预告功能：口算 -->
         <div class="card card-sub" style="opacity: 0.7;">
             <span class="soon-badge">Coming Soon</span>
             <div>
-                <div style="font-size: 32px; margin: 12px 0 4px;">🧮</div>
+                <div style="font-size: 36px; margin: 15px 0 10px;">🧮</div>
                 <h2 class="card-title">口算训练</h2>
             </div>
-            <p class="card-desc">唯快不破。自动生成 20 以内加减法与混合运算。</p>
+            <p class="card-desc">唯快不破。自动生成 20 以内加减法与混合运算，每日一练。</p>
         </div>
 
-        <!-- 预告功能 2 -->
+        <!-- 预告功能：听写 -->
         <div class="card card-sub" style="opacity: 0.7;">
             <span class="soon-badge">Coming Soon</span>
             <div>
-                <div style="font-size: 32px; margin: 12px 0 4px;">🎙️</div>
+                <div style="font-size: 36px; margin: 15px 0 10px;">🎙️</div>
                 <h2 class="card-title">听写助手</h2>
             </div>
             <p class="card-desc">解放双手。手机自动播报课文词语，孩子独立完成。</p>
