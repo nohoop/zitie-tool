@@ -138,23 +138,40 @@
         }
         
         .sheet {
-            width: 210mm; min-height: 297mm; background: white;
+            width: 297mm; min-height: 210mm; background: #fffdf5;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            padding: 15mm 12mm; box-sizing: border-box;
-            display: flex; flex-direction: column;
+            border: 1.5px solid var(--grid-main);
+            padding: 12mm 14mm; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 8mm;
             transform-origin: top center; /* 缩放原点 */
         }
 
-        /* 内部格线 */
-        .sheet-header { height: 14mm; border-bottom: 2px solid var(--grid-main); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; margin-bottom: 4mm; font-family: "KaiTi", serif; font-size: 15px; color: #333; }
-        .underline { border-bottom: 1px solid #333; min-width: 40px; display: inline-block; text-align: center; }
-        .char-block { margin-bottom: 4mm; break-inside: avoid; }
-        .row { display: flex; height: 17mm; border-left: 1px solid var(--grid-main); }
-        .cell { width: 13mm; height: 100%; position: relative; border-right: 1px solid var(--grid-main); border-bottom: 1px solid var(--grid-main); border-top: 1px solid var(--grid-main); display: flex; flex-direction: column; }
-        .pinyin { height: 4.5mm; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #666; font-family: Arial; border-bottom: 1px dashed var(--grid-sub); }
-        .hanzi { flex: 1; position: relative; }
-        .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
-        .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
+        .sheet-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--grid-main); padding-bottom: 5mm; font-family: "KaiTi", serif; color: #333; }
+        .doc-title { font-size: 22px; font-weight: 600; }
+        .sheet-meta { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .date-grid { display: grid; grid-template-columns: repeat(8, 16mm); border: 1px solid var(--grid-main); }
+        .date-grid span { width: 16mm; height: 12mm; border-left: 1px solid var(--grid-main); }
+        .date-grid span:first-child { border-left: none; }
+        .date-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: var(--text-sec); }
+
+        .writing-section { flex: 1; border: 2px solid var(--grid-main); padding: 6mm 8mm; display: flex; flex-direction: column; gap: 6mm; background: rgba(255,255,255,0.9); }
+        .writing-row { display: flex; gap: 6mm; flex: 1; }
+        .assignment { flex: 1; display: flex; align-items: flex-start; gap: 10px; padding: 4mm 5mm; border: 1px dashed var(--grid-sub); background: rgba(255,255,255,0.9); min-height: 55mm; box-sizing: border-box; }
+        .assignment.empty { opacity: 0.4; }
+        .assignment-no { font-size: 18px; font-family: "KaiTi", serif; color: var(--text-sec); min-width: 26px; text-align: center; line-height: 26px; border: 1px solid var(--grid-main); border-radius: 50%; }
+        .grid-pair { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4mm; flex: 1; }
+        .grid-square { position: relative; width: 100%; aspect-ratio: 1 / 1; border: 1px solid var(--grid-main); background: #fff; overflow: hidden; }
+        .grid-square::before { content: ""; position: absolute; left: 3px; right: 3px; top: 50%; border-top: 1px dashed var(--grid-sub); }
+        .grid-square::after { content: ""; position: absolute; top: 3px; bottom: 3px; left: 50%; border-left: 1px dashed var(--grid-sub); }
+        .grid-square.mi .diag-lines { display: block; }
+        .diag-lines { position: absolute; inset: 3px; display: none; }
+        .diag-lines::before,
+        .diag-lines::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; right: 0; border-top: 1px dashed var(--grid-sub); transform-origin: center; }
+        .diag-lines::before { transform: rotate(45deg); }
+        .diag-lines::after { transform: rotate(-45deg); }
+        .char-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: "KaiTi", serif; font-size: 24mm; color: var(--char-color); line-height: 1; }
+        .char-text.trace { color: rgba(0,0,0,0.35); }
+        .assignment.empty .char-text { opacity: 0; }
 
         /* 遮罩层 */
         .overlay {
@@ -203,7 +220,6 @@
         }
     </style>
     
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.min.js"></script>
 </head>
 <body>
@@ -283,31 +299,20 @@
     </main>
 
     <script>
-        // 数据库 (保持原样，省略部分以节省长度，功能不变)
         const DB = [
             { grade: "🟢 一年级", lessons: [ { t: "上册全集", c: "一二三上口目耳手日田禾火虫云山八十了子人大月儿头里可东西天四是女开水去来不小少牛果鸟早书刀尺本木林土力心中五立正在后我好长比巴把下个雨们问有半从你才明同学自己衣白的又和竹牙马用几只石多出见对妈全回" }, { t: "下册全集", c: "春风冬雪花飞入姓什么双国王方青清气晴情请生字左右红时动万吃叫主江住没以会走北京门广过各样伙伴这太阳校金秋因为也他地河说听哥单居招呼快乐玩很当音讲行许思床前光低故乡色外看爸晚笑再午节叶米真分豆那着到高兴千成间迷造运池欢网古凉细夕李语香打拍跑足声身体之相近习远玉义首采无树爱尖角亮机台放鱼朵美直呀边呢吗加文次找平办让包钟元洗共已经坐要连百还舌点块非常往瓜进空医别干奇七星吓怕跟家羊象都捉条爬姐您草房" } ] },
             { grade: "🔵 二年级", lessons: [ { t: "上册全集", c: "两哪宽顶眼睛肚皮孩跳变极片傍海洋作坏给带法如脚它娃她毛更知识小桥流水人家群队旗铜号领巾杨壮桐枫松柏棉杉化桂歌写丛深六熊猫朋友季吹肥农忙归爱辛苦年百花李吴郑梁陈赵钱孙周王官张古诗村童碧妆绿丝剪" }, { t: "下册全集", c: "古诗村童碧妆绿丝剪冲寻姑娘吐柳荡桃杏鲜邮递员原叔局堆礼邓植格引注满休息站贴画母爱对叶圆片沙海滩军舰帆号巾铜领队旗杨壮桐枫松柏棉杉化桂歌写丛深六熊猫朋友季吹肥农忙归爱辛苦" } ] },
             { grade: "👶 扩展练习", lessons: [ { t: "数字 0-10", c: "零一二三四五六七八九十" }, { t: "必背古诗", c: "鹅鹅鹅曲项向天歌白毛浮绿水红掌拨清波床前明月光疑是地上霜" } ] }
         ];
 
-        // 核心逻辑
-        const charCache = new Map();
-        window.HanziWriterDefaultOptions = {
-            charDataLoader: async (c, ok, err) => {
-                if (charCache.has(c)) { ok(charCache.get(c)); return; }
-                const sources = [`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`, `https://npm.elemecdn.com/hanzi-writer-data@2.0/${c}.json`];
-                try { const r = await Promise.any(sources.map(u => fetch(u).then(r=>{if(!r.ok)throw 0;return r.json()}))); charCache.set(c, r); ok(r); } catch { err(); }
-            }
-        };
-
-        const { pinyin } = pinyinPro || { pinyin: c=>c };
         const menuRoot = document.getElementById('menuRoot');
         const inputStr = document.getElementById('inputStr');
         const preview = document.getElementById('previewArea');
         const batchRow = document.getElementById('batchControlRow');
         const batchContainer = document.getElementById('batchContainer');
-        const BATCH_SIZE = 12;
-        const COLS = 13;
+        const PER_ROW = 3;
+        const SQUARES_PER_ASSIGNMENT = 6;
+        const BATCH_SIZE = 18;
         let timer;
 
         function initMenu() {
@@ -318,7 +323,6 @@
                 header.innerHTML = `<span>${group.grade}</span><svg class="group-arrow" viewBox="0 0 1024 1024" width="10"><path d="M340.992 822.464l369.856-310.272-369.856-310.464z" fill="currentColor"/></svg>`;
                 const body = document.createElement('div');
                 body.className = `group-body ${idx===0?'expanded':''}`;
-                
                 group.lessons.forEach(l => {
                     const item = document.createElement('div');
                     item.className = 'course-item';
@@ -326,7 +330,7 @@
                     item.innerHTML = `<span>${l.t}</span><span class="count-badge">${l.c.length}字</span>`;
                     item.onclick = (e) => {
                         e.stopPropagation();
-                        if(window.innerWidth <= 768) toggleSidebar(false); // 手机端选中后自动收起菜单
+                        if(window.innerWidth <= 768) toggleSidebar(false);
                         document.querySelectorAll('.course-item').forEach(x=>x.classList.remove('active'));
                         item.classList.add('active');
                         handleSelection(l.t, l.c);
@@ -337,12 +341,12 @@
                 menuRoot.appendChild(header); menuRoot.appendChild(body);
             });
             render();
-            autoScale(); // 初始化缩放
+            autoScale();
         }
 
         function handleSelection(t, c) {
             batchContainer.innerHTML = '';
-            if (c.length <= 15) {
+            if (c.length <= 18) {
                 batchRow.style.display = 'none'; inputStr.value = c;
                 document.getElementById('docTitle').innerText = t; render(); return;
             }
@@ -362,73 +366,93 @@
             batchContainer.firstChild.click();
         }
 
-        async function render() {
+        function render() {
             const str = inputStr.value.replace(/[^\u4e00-\u9fa5]/g,'');
             const chars = Array.from(new Set(str.split('')));
-            const mode = document.getElementById('mode').value;
             const type = document.getElementById('gridType').value;
+            const mode = document.getElementById('mode').value;
             const density = parseInt(document.getElementById('density').value);
 
             preview.innerHTML = '';
-            const pages = Math.ceil(chars.length / density);
+            const pages = Math.max(1, Math.ceil(chars.length / density));
             for(let p=0; p<pages; p++) {
-                const sheet = document.createElement('div'); sheet.className = 'sheet';
-                sheet.innerHTML = `<div class="sheet-header"><div>${document.getElementById('docTitle').innerText}</div><div>日期:___ 评分:___</div></div><div class="sheet-content"></div>`;
-                const content = sheet.querySelector('.sheet-content');
+                const sheet = createSheet();
+                const section = sheet.querySelector('.writing-section');
                 const slice = chars.slice(p*density, (p+1)*density);
-                
-                await Promise.all(slice.map(async (char) => {
-                    const ph = document.createElement('div'); content.appendChild(ph);
-                    try {
-                        const data = await HanziWriter.loadCharacterData(char);
-                        content.replaceChild(createBlock(char, data, mode, type), ph);
-                    } catch { ph.innerText = '加载失败'; }
-                }));
+                const rows = Math.ceil(density / PER_ROW);
+                for(let r=0; r<rows; r++) {
+                    const row = document.createElement('div');
+                    row.className = 'writing-row';
+                    for(let col=0; col<PER_ROW; col++) {
+                        const idx = r*PER_ROW+col;
+                        const char = slice[idx] || '';
+                        const globalIndex = p*density + idx + 1;
+                        row.appendChild(buildAssignment(char, type, mode, globalIndex));
+                    }
+                    section.appendChild(row);
+                }
                 preview.appendChild(sheet);
             }
-            autoScale(); // 渲染后再次缩放
+            autoScale();
         }
 
-        function createBlock(char, data, mode, type) {
-            const blk = document.createElement('div'); blk.className = 'char-block';
-            const r1 = document.createElement('div'); r1.className = 'row';
-            for(let i=0; i<COLS; i++) {
-                let m='empty', s=-1; if(i===0)m='black'; else if(i<=data.strokes.length){m='step';s=i-1} else m='trace';
-                r1.appendChild(cell(data.strokes, pinyin(char), m, s, type, i===0));
-            }
-            blk.appendChild(r1);
-            const r2 = document.createElement('div'); r2.className = 'row'; r2.style.borderTop='none';
-            for(let i=0; i<COLS; i++) {
-                let m=(i===0)?'black':(mode==='progressive'?(i<4?'trace':(i<8?'trace':'empty')):mode);
-                let op=(m==='trace' && mode==='progressive' && i>=4)?0.3:1;
-                const c = cell(data.strokes, '', m, -1, type, false);
-                if(m==='trace') c.querySelector('path').style.opacity=op;
-                r2.appendChild(c);
-            }
-            blk.appendChild(r2);
-            return blk;
+        function createSheet() {
+            const wrap = document.createElement('div');
+            wrap.className = 'sheet';
+            wrap.innerHTML = `
+                <div class="sheet-header">
+                    <div class="doc-title">${document.getElementById('docTitle').innerText}</div>
+                    <div class="sheet-meta">
+                        <span>日期：</span>
+                        <div>
+                            <div class="date-grid">${Array(8).fill('<span></span>').join('')}</div>
+                            <div class="date-labels"><span>年</span><span></span><span>月</span><span></span><span></span><span>日</span><span></span><span></span></div>
+                        </div>
+                        <span>点评：__________</span>
+                    </div>
+                </div>
+                <div class="writing-section"></div>
+            `;
+            return wrap;
         }
 
-        function cell(sts, py, m, s, type, cnt) {
-            const d = document.createElement('div'); d.className = 'cell';
-            const pd = document.createElement('div'); pd.className = 'pinyin'; pd.innerText = py;
-            if(cnt) { const b=document.createElement('span'); b.style.cssText="position:absolute;right:2px;top:1px;font-size:8px;color:#999"; b.innerText=sts.length; pd.appendChild(b); }
-            d.appendChild(pd);
-            const hd = document.createElement('div'); hd.className = 'hanzi';
-            let l = `<line x1="0" y1="50%" x2="100%" y2="50%" stroke="var(--grid-sub)" stroke-dasharray="4,4"/><line x1="50%" y1="0" x2="50%" y2="100%" stroke="var(--grid-sub)" stroke-dasharray="4,4"/>`;
-            if(type==='mi') l += `<line x1="0" y1="0" x2="100%" y2="100%" stroke="var(--grid-sub)" stroke-dasharray="4,4"/><line x1="100%" y1="0" x2="0" y2="100%" stroke="var(--grid-sub)" stroke-dasharray="4,4"/>`;
-            hd.innerHTML = `<svg class="grid-lines" width="100%" height="100%">${l}</svg>`;
-            if(sts && m!=='empty') {
-                let p = ''; sts.forEach((pt, i) => {
-                    let c = 'var(--char-color)'; if(m==='trace')c='#d1d1d6'; else if(m==='step'){if(i<s)c='#d1d1d6';else if(i===s)c='#ff3b30';else return;}
-                    p += `<path d="${pt}" fill="${c}"/>`;
-                });
-                hd.insertAdjacentHTML('beforeend', `<svg class="char-svg" viewBox="0 0 1024 1024"><g transform="scale(1, -1) translate(0, -900)">${p}</g></svg>`);
+        function buildAssignment(char, type, mode, seq) {
+            const block = document.createElement('div');
+            block.className = `assignment${char ? '' : ' empty'}`;
+            block.innerHTML = `<div class="assignment-no">${seq}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid-pair';
+            for(let i=0;i<SQUARES_PER_ASSIGNMENT;i++) {
+                grid.appendChild(createSquare(type, char, mode, i));
             }
-            d.appendChild(hd); return d;
+            block.appendChild(grid);
+            return block;
         }
 
-        // --- 移动端交互逻辑 ---
+        function createSquare(type, char, mode, idx) {
+            const square = document.createElement('div');
+            square.className = `grid-square ${type==='mi' ? 'mi' : ''}`;
+            const diag = document.createElement('div');
+            diag.className = 'diag-lines';
+            square.appendChild(diag);
+            if(char) {
+                if(mode === 'trace') {
+                    if(idx < 2) square.appendChild(renderChar(char, true));
+                } else {
+                    if(idx === 0) square.appendChild(renderChar(char, false));
+                    if(idx === 1) square.appendChild(renderChar(char, true));
+                }
+            }
+            return square;
+        }
+
+        function renderChar(char, isTrace) {
+            const span = document.createElement('span');
+            span.className = `char-text${isTrace ? ' trace' : ''}`;
+            span.innerText = char;
+            return span;
+        }
+
         function toggleSidebar(show) {
             const sb = document.getElementById('sidebar');
             const ol = document.getElementById('overlay');
@@ -436,20 +460,17 @@
             else { sb.classList.remove('open'); ol.classList.remove('active'); }
         }
 
-        // 核心：自动缩放预览图
         function autoScale() {
-            if(window.innerWidth > 768) { 
-                document.querySelectorAll('.sheet').forEach(s => s.style.transform = 'none');
-                return; 
+            if(window.innerWidth > 768) {
+                document.querySelectorAll('.sheet').forEach(s => { s.style.transform = 'none'; s.style.marginBottom = '0'; });
+                return;
             }
-            // 手机端：计算缩放比例
-            const stageWidth = document.querySelector('.stage').offsetWidth - 40; // 减去padding
-            const paperWidth = 210 * 3.78; // A4 mm 转 px (大概 794px)
+            const stageWidth = document.querySelector('.stage').offsetWidth - 40;
+            const paperWidth = 297 * 3.78;
             const scale = stageWidth / paperWidth;
-            
             document.querySelectorAll('.sheet').forEach(s => {
                 s.style.transform = `scale(${scale})`;
-                s.style.marginBottom = `-${(1-scale)*297*3.78}px`; // 修正缩放后的空白
+                s.style.marginBottom = `-${(1-scale)*210*3.78}px`;
             });
         }
 
@@ -470,7 +491,7 @@
         }
 
         inputStr.addEventListener('input', ()=>{ clearTimeout(timer); batchRow.style.display='none'; timer=setTimeout(render,500); });
-        window.addEventListener('resize', autoScale); // 屏幕旋转时重新计算
+        window.addEventListener('resize', autoScale);
         window.onload = initMenu;
     </script>
 </body>
