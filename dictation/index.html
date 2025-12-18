@@ -87,7 +87,7 @@
         :is(button, a, textarea, input, select):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
 
         /* 胶囊选择器 */
-        .capsule-group { display: flex; background: #e5e5ea; padding: 3px; border-radius: 10px; }
+        .capsule-group { display: flex; background: #e5e5ea; padding: 3px; border-radius: 10px; gap: 3px; flex-wrap: wrap; }
         .capsule { 
             flex: 1; text-align: center; padding: 6px; font-size: 13px; border-radius: 8px; cursor: pointer; color: #666;
         }
@@ -278,6 +278,7 @@
                     <div class="capsule" onclick="setSpeed(5000, this)">5秒</div>
                     <div class="capsule active" onclick="setSpeed(8000, this)">8秒</div>
                     <div class="capsule" onclick="setSpeed(12000, this)">12秒</div>
+                    <div class="capsule" onclick="setSpeed(14000, this)">14秒</div>
                 </div>
             </div>
 
