@@ -193,13 +193,17 @@
         }
 
         @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { display: block; height: auto; overflow: visible; background: #fff; }
             .sidebar, .toolbar, #toast, .overlay { display: none !important; }
             .main, .stage { padding: 0; margin: 0; background: white; height: auto; display: block; }
             .sheet { 
-                box-shadow: none; margin: 0; page-break-after: always; 
+                box-shadow: none; margin: 0; margin-bottom: 0 !important;
+                page-break-after: auto; break-after: auto;
                 width: 210mm; min-height: 297mm; 
                 transform: none !important; /* 打印时必须还原比例 */
             }
+            .sheet + .sheet { page-break-before: always; break-before: page; }
         }
     </style>
     
@@ -478,7 +482,7 @@
         // 核心：自动缩放预览图
         function autoScale() {
             if(window.innerWidth > 768) { 
-                document.querySelectorAll('.sheet').forEach(s => s.style.transform = 'none');
+                document.querySelectorAll('.sheet').forEach(s => { s.style.transform = 'none'; s.style.marginBottom = '0'; });
                 return; 
             }
             // 手机端：计算缩放比例
