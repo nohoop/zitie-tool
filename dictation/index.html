@@ -84,6 +84,7 @@
             background: #f5f5f7; font-size: 16px; outline: none; resize: none; box-sizing: border-box;
         }
         textarea:focus { background: #fff; border-color: var(--accent); }
+        :is(button, a, textarea, input, select):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
 
         /* 胶囊选择器 */
         .capsule-group { display: flex; background: #e5e5ea; padding: 3px; border-radius: 10px; }
@@ -213,12 +214,24 @@
         }
 
         @media print {
-            @page { size: A4 landscape; margin: 8mm; }
+            /* 避免“内容溢出可打印区域”导致空白页：@page 设为 0 边距，页面内用 padding 控制留白 */
+            @page { size: A4 landscape; margin: 0; }
+            html, body { width: 297mm; margin: 0; padding: 0; }
             body { display: block; height: auto; overflow: visible; background: #fff; }
             .sidebar, .player-card, .menu-btn, .overlay { display: none !important; }
             .main { display: block; overflow: visible; padding: 0; }
             .sheet-stack { margin: 0; gap: 0; }
-            .sheet-preview { margin: 0; box-shadow: none; border-radius: 0; padding: 0; width: 100%; min-height: auto; transform: none !important; }
+            .sheet-preview {
+                margin: 0;
+                box-shadow: none;
+                border-radius: 0;
+                width: 297mm;
+                height: 210mm;
+                min-height: 0;
+                padding: 8mm;
+                box-sizing: border-box;
+                transform: none !important;
+            }
             .sheet-preview + .sheet-preview { page-break-before: always; break-before: page; }
         }
     </style>

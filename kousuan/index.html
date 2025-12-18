@@ -225,6 +225,7 @@
         .switch input:checked + .track { background: rgba(0,122,255,0.75); }
         .switch input:checked + .track .thumb { transform: translateX(20px); }
         .switch input:focus-visible + .track { outline: 3px solid rgba(0,122,255,0.35); outline-offset: 3px; }
+        :is(button, a, input, select, textarea):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
 
         .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
         .btn {
@@ -400,7 +401,7 @@
         @media print {
             @page { size: A4 portrait; margin: 0; }
             html, body { width: 210mm; margin: 0; padding: 0; }
-            body { display: block; background: #fff; }
+            body { display: block; height: auto; overflow: visible; background: #fff; }
             .sidebar, .menu-btn, .overlay { display: none !important; }
             .main { padding: 0; display: block; overflow: visible; }
             .sheet {

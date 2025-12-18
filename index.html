@@ -53,6 +53,7 @@
             z-index: 1000;
         }
         .skip-link:focus { transform: translateY(0); }
+        :is(a, button, input, select, textarea):focus-visible { outline: 3px solid rgba(0, 113, 227, 0.55); outline-offset: 4px; border-radius: 12px; }
 
         /* 导航栏 */
         nav {
@@ -114,6 +115,27 @@
         a.card:focus-visible {
             outline: 3px solid rgba(0, 113, 227, 0.55);
             outline-offset: 6px;
+        }
+
+        .card-meta {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(118,118,128,0.12);
+            border: 1px solid rgba(0,0,0,0.06);
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         /* 主卡片 (字帖) */
@@ -243,6 +265,11 @@
                     <span class="card-tag">旗舰应用</span>
                     <h2 class="card-title">字帖工坊</h2>
                     <p class="card-desc">内置人教版 1-3 年级全套生字库。支持笔顺分解、智能分卷。A4 纸完美打印。</p>
+                    <div class="card-meta" aria-label="打印规格">
+                        <span class="pill">A4 竖版</span>
+                        <span class="pill">多页</span>
+                        <span class="pill">弱网可缓存</span>
+                    </div>
                 </div>
                 <div class="visual"></div>
             </a>
@@ -255,6 +282,10 @@
                     <h2 class="card-title">数位计数器</h2>
                 </div>
                 <p class="card-desc">11-20 专项突破。看图写数、看数画珠。搞懂“个位”与“十位”的关系。</p>
+                <div class="card-meta" aria-label="打印规格">
+                    <span class="pill">A4 竖版</span>
+                    <span class="pill">1 页/批</span>
+                </div>
             </a>
 
             <!-- 核心功能 3：听写助手 (已上线) -->
@@ -265,6 +296,10 @@
                     <h2 class="card-title">听写助手</h2>
                 </div>
                 <p class="card-desc">解放双手。自动语音播报课文词语，语速可调，生成默写纸。</p>
+                <div class="card-meta" aria-label="打印规格">
+                    <span class="pill">A4 横版</span>
+                    <span class="pill">田字格整页</span>
+                </div>
             </a>
 
             <!-- 新工具：口算生成器 -->
@@ -275,6 +310,10 @@
                     <h2 class="card-title">口算生成器</h2>
                 </div>
                 <p class="card-desc">20 以内加减、凑十破十、填空题。一键换题，A4 直接打印。</p>
+                <div class="card-meta" aria-label="打印规格">
+                    <span class="pill">A4 竖版</span>
+                    <span class="pill">可选答案页</span>
+                </div>
             </a>
         </div>
     </main>

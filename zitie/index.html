@@ -115,7 +115,8 @@
         .toolbar {
             height: 50px; background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
+            display: grid; grid-template-columns: auto 1fr auto;
+            align-items: center;
             padding: 0 15px; position: sticky; top: 0; z-index: 10;
         }
         
@@ -125,13 +126,29 @@
             background: none; border: none; padding: 8px; margin-left: -8px; cursor: pointer; color: var(--accent);
         }
 
-        .doc-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .doc-info { min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+        .doc-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(52vw, 520px); }
+        .load-status { font-size: 11px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(56vw, 560px); }
+        .load-actions { display: inline-flex; align-items: center; gap: 8px; }
+        .retry-btn {
+            border: 1px solid rgba(0,0,0,0.10);
+            background: rgba(118,118,128,0.14);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        .retry-btn:active { transform: scale(0.99); }
+        .retry-btn[hidden] { display: none; }
 
         .btn-print {
             background: var(--accent); color: white; border: none;
             padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;
             cursor: pointer; display: flex; align-items: center; gap: 4px;
         }
+        :is(button, a, input, select, textarea):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
 
         /* 舞台与纸张 */
         .stage { 
@@ -282,8 +299,14 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
 
-            <div class="doc-name" id="docTitle">演示练习</div>
-            <button class="btn-print" onclick="window.print()">
+            <div class="doc-info">
+                <div class="doc-name" id="docTitle">演示练习</div>
+                <div class="load-actions">
+                    <div class="load-status" id="loadStatus" role="status" aria-live="polite"></div>
+                    <button class="retry-btn" id="retryBtn" type="button" hidden>重试失败</button>
+                </div>
+            </div>
+            <button class="btn-print" type="button" onclick="window.print()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                 <span style="margin-left:4px">打印</span>
             </button>
@@ -304,6 +327,7 @@
         // 核心逻辑：字形数据加载（更快、更稳：编码 + 超时 + 重试 + 并发限制）
         const charCache = new Map();
         const inflightChar = new Map();
+        let preferredSourceIndex = 0;
         const CHAR_DATA_SOURCES = [
             (c) => `https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`,
             (c) => `https://npm.elemecdn.com/hanzi-writer-data@2.0/${c}.json`,
@@ -368,24 +392,55 @@
             const encoded = encodeURIComponent(char);
             const urls = CHAR_DATA_SOURCES.map((mk) => mk(encoded));
 
-            // Round 1: race CDNs, prefer cache
+            // Round 1: try preferred CDN first (reduces request fan-out and tail latency)
+            try {
+                const idx = Math.min(Math.max(preferredSourceIndex, 0), urls.length - 1);
+                const preferred = fetchJsonWithTimeout(urls[idx], { timeoutMs: 3500, cacheMode: 'force-cache' });
+                const data = await preferred.promise;
+                return data;
+            } catch {
+                // ignore and fallback to racing
+            }
+
+            // Round 2: race CDNs, prefer cache
             try {
                 const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'force-cache' }));
-                return await firstSuccessful(tasks);
-            } catch (e1) {
-                // Round 2: race again, bypass cache (handles occasional bad edge cache)
+                const data = await firstSuccessful(tasks.map((t, idx) => ({
+                    ...t,
+                    promise: t.promise.then((v) => {
+                        preferredSourceIndex = idx;
+                        return v;
+                    }),
+                })));
+                return data;
+            } catch {
+                // Round 3: race again, bypass cache (handles occasional bad edge cache)
                 const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'no-store' }));
-                return await firstSuccessful(tasks);
+                const data = await firstSuccessful(tasks.map((t, idx) => ({
+                    ...t,
+                    promise: t.promise.then((v) => {
+                        preferredSourceIndex = idx;
+                        return v;
+                    }),
+                })));
+                return data;
             }
         }
 
         async function loadCharData(char) {
             if (charCache.has(char)) return charCache.get(char);
             if (inflightChar.has(char)) return inflightChar.get(char);
-            const p = fetchCharDataFromCDN(char).then((data) => {
+            const p = (async () => {
+                const cached = await idb.get(char);
+                if (cached) {
+                    charCache.set(char, cached);
+                    return cached;
+                }
+                const data = await fetchCharDataFromCDN(char);
                 charCache.set(char, data);
+                idb.set(char, data);
                 return data;
-            }).finally(() => inflightChar.delete(char));
+            })().finally(() => inflightChar.delete(char));
             inflightChar.set(char, p);
             return p;
         }
@@ -414,6 +469,67 @@
         const COLS = 13;
         let timer;
         let renderToken = 0;
+        let lastFailedChars = new Set();
+
+        const loadStatusEl = document.getElementById('loadStatus');
+        const retryBtn = document.getElementById('retryBtn');
+
+        function setLoadStatus(text) {
+            if (!loadStatusEl) return;
+            loadStatusEl.textContent = text || '';
+        }
+
+        function setRetryVisible(visible) {
+            if (!retryBtn) return;
+            retryBtn.hidden = !visible;
+        }
+
+        retryBtn?.addEventListener('click', () => {
+            if (!lastFailedChars || lastFailedChars.size === 0) return;
+            retryFailed();
+        });
+
+        // IndexedDB 缓存：弱网/重复打开提速（失败不影响主流程）
+        const idb = (() => {
+            let dbp = null;
+            function open() {
+                if (dbp) return dbp;
+                dbp = new Promise((resolve, reject) => {
+                    if (!('indexedDB' in window)) { resolve(null); return; }
+                    const req = indexedDB.open('yobox-zitie', 1);
+                    req.onupgradeneeded = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains('charData')) db.createObjectStore('charData', { keyPath: 'char' });
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                }).catch(() => null);
+                return dbp;
+            }
+            async function get(char) {
+                const db = await open();
+                if (!db) return null;
+                return await new Promise((resolve) => {
+                    const tx = db.transaction('charData', 'readonly');
+                    const store = tx.objectStore('charData');
+                    const req = store.get(char);
+                    req.onsuccess = () => resolve(req.result?.data || null);
+                    req.onerror = () => resolve(null);
+                });
+            }
+            async function set(char, data) {
+                const db = await open();
+                if (!db) return;
+                await new Promise((resolve) => {
+                    const tx = db.transaction('charData', 'readwrite');
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                    tx.onabort = () => resolve();
+                    tx.objectStore('charData').put({ char, data, t: Date.now() });
+                });
+            }
+            return { get, set };
+        })();
 
         function initMenu() {
             menuRoot.innerHTML = '';
@@ -478,6 +594,10 @@
             preview.innerHTML = '';
             const pages = Math.ceil(chars.length / density);
             const placeholdersByChar = new Map();
+            setRetryVisible(false);
+            lastFailedChars = new Set();
+            if (chars.length === 0) { setLoadStatus(''); return; }
+            setLoadStatus('准备加载…');
             for(let p=0; p<pages; p++) {
                 const sheet = document.createElement('div'); sheet.className = 'sheet';
                 sheet.innerHTML = `<div class="sheet-header"><div>${document.getElementById('docTitle').innerText}</div><div>日期:___ 评分:___</div></div><div class="sheet-content"></div>`;
@@ -497,6 +617,19 @@
 
             // 预取：限制并发，避免网络拥塞导致“加载失败”
             const uniqueChars = Array.from(placeholdersByChar.keys());
+            const total = uniqueChars.length;
+            let done = 0;
+            let failed = 0;
+            const updateProgress = () => {
+                if (token !== renderToken) return;
+                if (failed > 0) {
+                    setLoadStatus(`加载：${done}/${total}（失败 ${failed}）`);
+                } else {
+                    setLoadStatus(`加载：${done}/${total}`);
+                }
+                setRetryVisible(failed > 0);
+            };
+            updateProgress();
             await mapWithConcurrency(uniqueChars, 6, async (char) => {
                 try {
                     const data = await loadCharData(char);
@@ -506,13 +639,32 @@
                         const block = createBlock(char, data, mode, type);
                         if (ph.parentNode === content) content.replaceChild(block, ph);
                     });
+                    done += 1;
+                    updateProgress();
                 } catch {
                     if (token !== renderToken) return;
                     const list = placeholdersByChar.get(char) || [];
                     list.forEach(({ ph }) => { if (ph) ph.innerText = '加载失败'; });
+                    lastFailedChars.add(char);
+                    failed += 1;
+                    done += 1;
+                    updateProgress();
                 }
             });
+            if (token === renderToken) {
+                if (lastFailedChars.size > 0) setLoadStatus(`加载完成（失败 ${lastFailedChars.size}，可点“重试失败”）`);
+                else setLoadStatus('加载完成');
+            }
             autoScale(); // 渲染后再次缩放
+        }
+
+        async function retryFailed() {
+            const failedChars = Array.from(lastFailedChars);
+            if (failedChars.length === 0) return;
+            setRetryVisible(false);
+            setLoadStatus(`重试中…（${failedChars.length}字）`);
+            failedChars.forEach((c) => { charCache.delete(c); inflightChar.delete(c); });
+            await render();
         }
 
         function createBlock(char, data, mode, type) {
