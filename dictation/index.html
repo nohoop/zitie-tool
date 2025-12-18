@@ -137,7 +137,7 @@
         }
 
         .tian-grid-wrap {
-            --cols: 14;
+            --cols: 12;
             --rows: 9;
             --cell: 20mm;
             width: calc(var(--cols) * var(--cell));
@@ -160,8 +160,8 @@
             border-right: 1.2px solid var(--grid-ink);
             border-bottom: 1.2px solid var(--grid-ink);
         }
-        .tian-cell:nth-child(14n) { border-right: none; }
-        .tian-cell:nth-last-child(-n+14) { border-bottom: none; }
+        .tian-cell:nth-child(12n) { border-right: none; }
+        .tian-cell:nth-last-child(-n+12) { border-bottom: none; }
 
         .tian-cell::before {
             content: '';
@@ -514,7 +514,7 @@
 
         // --- 渲染打印纸 ---
         function renderSheet() {
-            const cols = 14;
+            const cols = 12;
             const rows = 9;
             const headerRows = 1; // 预留一行写日期
             const cellsPerPage = cols * rows;
