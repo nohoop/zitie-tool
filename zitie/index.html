@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YoBox 字帖工坊</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://npm.elemecdn.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
     
     <style>
         :root {
@@ -300,13 +303,14 @@
 
         // 核心逻辑：字形数据加载（更快、更稳：编码 + 超时 + 重试 + 并发限制）
         const charCache = new Map();
+        const inflightChar = new Map();
         const CHAR_DATA_SOURCES = [
             (c) => `https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`,
             (c) => `https://npm.elemecdn.com/hanzi-writer-data@2.0/${c}.json`,
             (c) => `https://unpkg.com/hanzi-writer-data@2.0/${c}.json`,
         ];
 
-        async function fetchJsonWithTimeout(url, { timeoutMs, cacheMode }) {
+        function fetchJsonWithTimeout(url, { timeoutMs, cacheMode }) {
             const fetchOpts = {};
             if (cacheMode) fetchOpts.cache = cacheMode;
 
@@ -325,41 +329,65 @@
                 }, timeoutMs);
             });
 
-            try {
-                const fetchPromise = fetch(url, fetchOpts).then(async (res) => {
+            const fetchPromise = fetch(url, fetchOpts).then(async (res) => {
+                window.clearTimeout(timerId);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return await res.json();
                 });
-                return await Promise.race([fetchPromise, timeoutPromise]);
-            } finally {
-                window.clearTimeout(timerId);
-            }
+
+            const promise = Promise.race([fetchPromise, timeoutPromise]).finally(() => window.clearTimeout(timerId));
+            return { promise, abort: () => { try { controller?.abort(); } catch { /* ignore */ } } };
+        }
+
+        function firstSuccessful(tasks) {
+            return new Promise((resolve, reject) => {
+                let rejected = 0;
+                const errors = [];
+                const done = (value, winnerIdx) => {
+                    tasks.forEach((t, idx) => {
+                        if (idx !== winnerIdx) {
+                            try { t.abort?.(); } catch { /* ignore */ }
+                        }
+                    });
+                    resolve(value);
+                };
+                tasks.forEach((t, idx) => {
+                    Promise.resolve(t.promise).then(
+                        (val) => done(val, idx),
+                        (err) => {
+                            errors[idx] = err;
+                            rejected += 1;
+                            if (rejected === tasks.length) reject(errors.filter(Boolean)[0] || err);
+                        }
+                    );
+                });
+            });
         }
 
         async function fetchCharDataFromCDN(char) {
             const encoded = encodeURIComponent(char);
-            let lastError;
-            for (const mk of CHAR_DATA_SOURCES) {
-                const baseUrl = mk(encoded);
-                try {
-                    return await fetchJsonWithTimeout(baseUrl, { timeoutMs: 9000, cacheMode: 'force-cache' });
-                } catch (e1) {
-                    lastError = e1;
-                    try {
-                        return await fetchJsonWithTimeout(baseUrl, { timeoutMs: 9000, cacheMode: 'no-store' });
-                    } catch (e2) {
-                        lastError = e2;
-                    }
-                }
+            const urls = CHAR_DATA_SOURCES.map((mk) => mk(encoded));
+
+            // Round 1: race CDNs, prefer cache
+            try {
+                const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'force-cache' }));
+                return await firstSuccessful(tasks);
+            } catch (e1) {
+                // Round 2: race again, bypass cache (handles occasional bad edge cache)
+                const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'no-store' }));
+                return await firstSuccessful(tasks);
             }
-            throw lastError || new Error('Failed to load character data');
         }
 
         async function loadCharData(char) {
             if (charCache.has(char)) return charCache.get(char);
-            const data = await fetchCharDataFromCDN(char);
-            charCache.set(char, data);
-            return data;
+            if (inflightChar.has(char)) return inflightChar.get(char);
+            const p = fetchCharDataFromCDN(char).then((data) => {
+                charCache.set(char, data);
+                return data;
+            }).finally(() => inflightChar.delete(char));
+            inflightChar.set(char, p);
+            return p;
         }
 
         async function mapWithConcurrency(items, limit, fn) {
@@ -469,7 +497,7 @@
 
             // 预取：限制并发，避免网络拥塞导致“加载失败”
             const uniqueChars = Array.from(placeholdersByChar.keys());
-            await mapWithConcurrency(uniqueChars, 4, async (char) => {
+            await mapWithConcurrency(uniqueChars, 6, async (char) => {
                 try {
                     const data = await loadCharData(char);
                     if (token !== renderToken) return;
