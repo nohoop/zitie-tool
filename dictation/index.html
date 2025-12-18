@@ -12,6 +12,8 @@
         :root {
             --bg: #f5f5f7; --white: #fff; --accent: #007aff; 
             --text: #1d1d1f; --border: #d2d2d7; --green: #34c759;
+            --grid-ink: #6e6aa8;
+            --grid-ink-soft: rgba(110, 106, 168, 0.75);
         }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text); }
 
@@ -120,29 +122,65 @@
         .btn-play svg { width: 30px; height: 30px; fill: currentColor; }
 
         /* A4 打印预览 (在屏幕下方) */
+        .sheet-stack { margin-top: 40px; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+
+        /* 参考老师示例：A4 横向 + 田字格整页排版 */
         .sheet-preview {
-            margin-top: 40px; margin-bottom: 40px;
-            width: 210mm; min-height: 297mm; background: white;
-            padding: 20mm; box-sizing: border-box;
+            width: 297mm;
+            min-height: 210mm;
+            background: white;
+            padding: 8mm;
+            box-sizing: border-box;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; gap: 0;
+            border-radius: 10px;
         }
-        .sheet-title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; font-family: "KaiTi"; }
-        
-        /* 默写行 */
-        .dictation-row {
-            display: flex; height: 16mm; border-bottom: 1px dashed #eee; align-items: center;
+
+        .tian-grid-wrap {
+            --cols: 14;
+            --rows: 9;
+            --cell: 20mm;
+            width: calc(var(--cols) * var(--cell));
+            height: calc(var(--rows) * var(--cell));
+            margin: 0 auto;
+            position: relative;
         }
-        .row-num { width: 30px; font-size: 12px; color: #999; }
-        .row-pinyin { width: 100px; font-size: 16px; color: #666; font-family: Arial; text-align: right; padding-right: 20px; }
-        .row-grid { flex: 1; display: flex; gap: 5px; height: 100%; }
-        .box { width: 16mm; height: 16mm; border: 1px solid var(--green); box-sizing: border-box; position: relative; }
-        /* 田字格虚线 */
-        .box::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to right, transparent 49%, #a1dcb6 49%, #a1dcb6 51%, transparent 51%),
-                        linear-gradient(to bottom, transparent 49%, #a1dcb6 49%, #a1dcb6 51%, transparent 51%);
-            z-index: 0; pointer-events: none;
+
+        .tian-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(var(--cols), var(--cell));
+            grid-template-rows: repeat(var(--rows), var(--cell));
+            border: 1.6px solid var(--grid-ink);
+        }
+
+        .tian-cell {
+            position: relative;
+            border-right: 1.2px solid var(--grid-ink);
+            border-bottom: 1.2px solid var(--grid-ink);
+        }
+        .tian-cell:nth-child(14n) { border-right: none; }
+        .tian-cell:nth-last-child(-n+14) { border-bottom: none; }
+
+        .tian-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            border-left: 1px dashed var(--grid-ink-soft);
+            transform: translateX(-0.5px);
+            pointer-events: none;
+        }
+        .tian-cell::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            border-top: 1px dashed var(--grid-ink-soft);
+            transform: translateY(-0.5px);
+            pointer-events: none;
         }
 
         /* 移动端：抽屉侧栏（参考“字帖工坊”） */
@@ -170,16 +208,18 @@
             }
 
             .player-card { margin-top: 16px; width: 92%; }
-            .sheet-preview { margin-top: 20px; margin-bottom: 28px; }
+            .sheet-stack { margin-top: 20px; margin-bottom: 28px; }
+            .sheet-preview { border-radius: 14px; }
         }
 
         @media print {
+            @page { size: A4 landscape; margin: 8mm; }
+            body { display: block; height: auto; overflow: visible; background: #fff; }
             .sidebar, .player-card, .menu-btn, .overlay { display: none !important; }
             .main { display: block; overflow: visible; padding: 0; }
-            .sheet-preview { 
-                margin: 0; box-shadow: none; transform: none !important; width: 100%; 
-                page-break-after: always;
-            }
+            .sheet-stack { margin: 0; gap: 0; }
+            .sheet-preview { margin: 0; box-shadow: none; border-radius: 0; padding: 0; width: 100%; min-height: auto; transform: none !important; }
+            .sheet-preview + .sheet-preview { page-break-before: always; break-before: page; }
         }
     </style>
 </head>
@@ -254,15 +294,10 @@
         </div>
 
         <!-- 打印预览区 -->
-        <div class="sheet-preview" id="sheet">
-            <div class="sheet-title">听写默写单</div>
-            <!-- 内容由 JS 生成 -->
-        </div>
+        <div class="sheet-stack" id="sheet" aria-label="打印预览"></div>
     </main>
 
     <script>
-        const { pinyin } = pinyinPro;
-
         function toggleSidebar(forceOpen) {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
@@ -273,22 +308,28 @@
         }
 
         function fitSheetPreview() {
-            const sheet = document.getElementById('sheet');
-            if (!sheet) return;
+            const stack = document.getElementById('sheet');
+            if (!stack) return;
             const isMobile = window.matchMedia('(max-width: 860px)').matches;
-            sheet.style.transform = '';
-            sheet.style.transformOrigin = '';
-            sheet.style.marginBottom = '';
-            if (!isMobile) return;
+            const pages = Array.from(stack.querySelectorAll('.sheet-preview'));
+            for (const page of pages) {
+                page.style.transform = '';
+                page.style.transformOrigin = '';
+                page.style.marginBottom = '';
+            }
+            if (!isMobile || pages.length === 0) return;
 
             const main = document.querySelector('main.main');
             const available = Math.max(0, (main?.clientWidth || window.innerWidth) - 24);
-            const baseWidth = sheet.offsetWidth;
+            const baseWidth = pages[0].offsetWidth;
             if (!baseWidth) return;
             const scale = Math.min(1, available / baseWidth);
-            sheet.style.transformOrigin = 'top center';
-            sheet.style.transform = `scale(${scale})`;
-            sheet.style.marginBottom = `${-(1 - scale) * sheet.offsetHeight + 28}px`;
+            pages.forEach((page, idx) => {
+                page.style.transformOrigin = 'top center';
+                page.style.transform = `scale(${scale})`;
+                const gap = idx === pages.length - 1 ? 28 : 20;
+                page.style.marginBottom = `${-(1 - scale) * page.offsetHeight + gap}px`;
+            });
         }
 
         let fitRaf = 0;
@@ -459,47 +500,61 @@
 
         // --- 渲染打印纸 ---
         function renderSheet() {
-            let html = `<div class="sheet-title">听写默写单 (共${words.length}个)</div>`;
-            
-            words.forEach((word, index) => {
-                const py = pinyin(word);
-                const chars = word.split('');
-                
-                // 生成右侧格子
-                let gridsHtml = '';
-                // 默认生成足够写这个词的格子，再多加2个空格备用
-                for (let i = 0; i < Math.max(chars.length + 2, 6); i++) {
-                    gridsHtml += `<div class="box"></div>`;
-                }
+            const cols = 14;
+            const rows = 9;
+            const headerRows = 1; // 预留一行写日期
+            const cellsPerPage = cols * rows;
+            const startCell = cols * headerRows;
 
-                html += `
-                    <div class="dictation-row">
-                        <div class="row-num">${index + 1}</div>
-                        <div class="row-pinyin">${py}</div>
-                        <div class="row-grid">
-                            ${gridsHtml}
-                        </div>
-                    </div>
-                `;
-            });
+            function newPage() {
+                return new Array(cellsPerPage).fill(null);
+            }
 
-            // 补满页面空行
-            const remaining = 12 - words.length;
-            if (remaining > 0) {
-                for (let i = 0; i < remaining; i++) {
-                    let gridsHtml = '';
-                    for (let j=0; j<8; j++) gridsHtml += `<div class="box"></div>`;
-                    html += `
-                        <div class="dictation-row">
-                            <div class="row-num"></div>
-                            <div class="row-pinyin"></div>
-                            <div class="row-grid">${gridsHtml}</div>
-                        </div>
-                    `;
+            const pages = [newPage()];
+            let pageIndex = 0;
+            let cursor = startCell;
+
+            function ensureSpace(requiredCells) {
+                const col = cursor % cols;
+                if (col + requiredCells > cols) cursor += (cols - col);
+                if (cursor + requiredCells > cellsPerPage) {
+                    pages.push(newPage());
+                    pageIndex += 1;
+                    cursor = startCell;
                 }
             }
 
-            sheetEl.innerHTML = html;
+            words.forEach((word, index) => {
+                const chars = word.split('');
+                const required = 1 + chars.length + 1; // 序号格 + 字格 + 间隔 1 格
+                ensureSpace(required);
+
+                pages[pageIndex][cursor] = { type: 'num', value: index + 1 };
+                cursor += 1;
+                for (let i = 0; i < chars.length; i++) {
+                    pages[pageIndex][cursor] = { type: 'char' };
+                    cursor += 1;
+                }
+                pages[pageIndex][cursor] = { type: 'spacer' };
+                cursor += 1;
+            });
+
+            const sheetsHtml = pages.map((page) => {
+                let gridHtml = '';
+                for (let i = 0; i < cellsPerPage; i++) {
+                    const cell = page[i];
+                    gridHtml += `<div class="tian-cell"></div>`;
+                }
+                return `
+                    <section class="sheet-preview">
+                        <div class="tian-grid-wrap">
+                            <div class="tian-grid">${gridHtml}</div>
+                        </div>
+                    </section>
+                `;
+            });
+
+            sheetEl.innerHTML = sheetsHtml.join('');
             requestFit();
         }
     </script>
