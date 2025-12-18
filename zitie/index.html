@@ -155,6 +155,7 @@
         .hanzi { flex: 1; position: relative; }
         .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
+        .char-placeholder { min-height: 38mm; display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px; }
 
         /* 遮罩层 */
         .overlay {
@@ -211,7 +212,6 @@
         }
     </style>
     
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.min.js"></script>
 </head>
 <body>
@@ -298,7 +298,7 @@
             { grade: "👶 扩展练习", lessons: [ { t: "数字 0-10", c: "零一二三四五六七八九十" }, { t: "必背古诗", c: "鹅鹅鹅曲项向天歌白毛浮绿水红掌拨清波床前明月光疑是地上霜" } ] }
         ];
 
-        // 核心逻辑
+        // 核心逻辑：字形数据加载（更快、更稳：编码 + 超时 + 重试 + 并发限制）
         const charCache = new Map();
         const CHAR_DATA_SOURCES = [
             (c) => `https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`,
@@ -306,16 +306,32 @@
             (c) => `https://unpkg.com/hanzi-writer-data@2.0/${c}.json`,
         ];
 
+        async function fetchJsonWithTimeout(url, { timeoutMs, cacheMode }) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, { signal: controller.signal, cache: cacheMode || 'default' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function fetchCharDataFromCDN(char) {
+            const encoded = encodeURIComponent(char);
             let lastError;
             for (const mk of CHAR_DATA_SOURCES) {
-                const url = mk(char);
+                const baseUrl = mk(encoded);
                 try {
-                    const res = await fetch(url, { cache: 'force-cache' });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                } catch (e) {
-                    lastError = e;
+                    return await fetchJsonWithTimeout(baseUrl, { timeoutMs: 9000, cacheMode: 'force-cache' });
+                } catch (e1) {
+                    lastError = e1;
+                    try {
+                        return await fetchJsonWithTimeout(baseUrl, { timeoutMs: 9000, cacheMode: 'no-store' });
+                    } catch (e2) {
+                        lastError = e2;
+                    }
                 }
             }
             throw lastError || new Error('Failed to load character data');
@@ -323,29 +339,24 @@
 
         async function loadCharData(char) {
             if (charCache.has(char)) return charCache.get(char);
-
-            const hanziWriter = window.HanziWriter;
-            if (hanziWriter && typeof hanziWriter.loadCharacterData === 'function') {
-                const data = await hanziWriter.loadCharacterData(char);
-                charCache.set(char, data);
-                return data;
-            }
-
             const data = await fetchCharDataFromCDN(char);
             charCache.set(char, data);
             return data;
         }
 
-        window.HanziWriterDefaultOptions = {
-            charDataLoader: async (c, ok, err) => {
-                try {
-                    const data = await loadCharData(c);
-                    ok(data);
-                } catch {
-                    err();
+        async function mapWithConcurrency(items, limit, fn) {
+            const results = new Array(items.length);
+            let cursor = 0;
+            const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+                while (cursor < items.length) {
+                    const idx = cursor;
+                    cursor += 1;
+                    results[idx] = await fn(items[idx], idx);
                 }
-            }
-        };
+            });
+            await Promise.all(workers);
+            return results;
+        }
 
         const { pinyin } = window.pinyinPro || { pinyin: (c) => c };
         const menuRoot = document.getElementById('menuRoot');
@@ -356,6 +367,7 @@
         const BATCH_SIZE = 12;
         const COLS = 13;
         let timer;
+        let renderToken = 0;
 
         function initMenu() {
             menuRoot.innerHTML = '';
@@ -410,6 +422,7 @@
         }
 
         async function render() {
+            const token = ++renderToken;
             const str = inputStr.value.replace(/[^\u4e00-\u9fa5]/g,'');
             const chars = Array.from(new Set(str.split('')));
             const mode = document.getElementById('mode').value;
@@ -418,21 +431,41 @@
 
             preview.innerHTML = '';
             const pages = Math.ceil(chars.length / density);
+            const placeholdersByChar = new Map();
             for(let p=0; p<pages; p++) {
                 const sheet = document.createElement('div'); sheet.className = 'sheet';
                 sheet.innerHTML = `<div class="sheet-header"><div>${document.getElementById('docTitle').innerText}</div><div>日期:___ 评分:___</div></div><div class="sheet-content"></div>`;
                 const content = sheet.querySelector('.sheet-content');
                 const slice = chars.slice(p*density, (p+1)*density);
-                
-                await Promise.all(slice.map(async (char) => {
-                    const ph = document.createElement('div'); content.appendChild(ph);
-                    try {
-                        const data = await loadCharData(char);
-                        content.replaceChild(createBlock(char, data, mode, type), ph);
-                    } catch { ph.innerText = '加载失败'; }
-                }));
+
+                slice.forEach((char) => {
+                    const ph = document.createElement('div');
+                    ph.className = 'char-placeholder';
+                    ph.innerText = '加载中…';
+                    content.appendChild(ph);
+                    if (!placeholdersByChar.has(char)) placeholdersByChar.set(char, []);
+                    placeholdersByChar.get(char).push({ ph, content });
+                });
                 preview.appendChild(sheet);
             }
+
+            // 预取：限制并发，避免网络拥塞导致“加载失败”
+            const uniqueChars = Array.from(placeholdersByChar.keys());
+            await mapWithConcurrency(uniqueChars, 6, async (char) => {
+                try {
+                    const data = await loadCharData(char);
+                    if (token !== renderToken) return;
+                    const list = placeholdersByChar.get(char) || [];
+                    list.forEach(({ ph, content }) => {
+                        const block = createBlock(char, data, mode, type);
+                        if (ph.parentNode === content) content.replaceChild(block, ph);
+                    });
+                } catch {
+                    if (token !== renderToken) return;
+                    const list = placeholdersByChar.get(char) || [];
+                    list.forEach(({ ph }) => { if (ph) ph.innerText = '加载失败'; });
+                }
+            });
             autoScale(); // 渲染后再次缩放
         }
 
