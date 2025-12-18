@@ -158,6 +158,7 @@
         }
         
         .sheet {
+<<<<<<< Updated upstream
             width: 210mm; min-height: 297mm; background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             padding: 15mm 12mm; box-sizing: border-box;
@@ -176,6 +177,74 @@
         .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
         .char-placeholder { min-height: 38mm; display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px; }
+=======
+            width: 297mm; min-height: 210mm; background: #fffdf2;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1.5px solid rgba(0,0,0,0.05);
+            padding: 10mm 8mm; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 6mm; align-items: center;
+            transform-origin: top center;
+        }
+
+        .sheet-info {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            font-family: "KaiTi", serif; font-size: 14px; color: #555;
+        }
+        .sheet-info span { min-width: 60px; }
+        .sheet-info span:first-child { flex: 1; font-weight: 600; }
+
+        .paper {
+            --grid-cols: 18;
+            --grid-rows: 14;
+            --cell-size: 13.2mm;
+            width: calc(var(--grid-cols) * var(--cell-size));
+            height: calc(var(--grid-rows) * var(--cell-size));
+            border: 1.5px solid var(--grid-main);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+            background-color: #fffdfb;
+            background-image:
+                linear-gradient(to right, var(--grid-main) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-main) 1px, transparent 1px),
+                linear-gradient(to right, transparent calc(var(--cell-size)/2 - 0.2mm), var(--grid-sub) calc(var(--cell-size)/2 - 0.05mm), transparent calc(var(--cell-size)/2 + 0.05mm)),
+                linear-gradient(to bottom, transparent calc(var(--cell-size)/2 - 0.2mm), var(--grid-sub) calc(var(--cell-size)/2 - 0.05mm), transparent calc(var(--cell-size)/2 + 0.05mm)),
+                var(--diag-layer-1, none),
+                var(--diag-layer-2, none);
+            background-size:
+                var(--cell-size) var(--cell-size),
+                var(--cell-size) var(--cell-size),
+                var(--cell-size) var(--cell-size),
+                var(--cell-size) var(--cell-size),
+                var(--cell-size) var(--cell-size),
+                var(--cell-size) var(--cell-size);
+            display: grid;
+            grid-template-columns: repeat(var(--grid-cols), var(--cell-size));
+            grid-template-rows: repeat(var(--grid-rows), var(--cell-size));
+            position: relative;
+            overflow: hidden;
+            font-family: "KaiTi", serif;
+        }
+
+        .paper.mi-grid {
+            --diag-layer-1: linear-gradient(45deg, transparent calc(50% - 0.2mm), var(--grid-sub) calc(50% - 0.05mm), transparent calc(50% + 0.05mm));
+            --diag-layer-2: linear-gradient(-45deg, transparent calc(50% - 0.2mm), var(--grid-sub) calc(50% - 0.05mm), transparent calc(50% + 0.05mm));
+        }
+
+        .grid-item { display: flex; align-items: center; justify-content: center; text-align: center; }
+        .date-helper { font-size: 12px; color: var(--text-sec); }
+
+        .circled-number {
+            width: calc(var(--cell-size) - 2mm); height: calc(var(--cell-size) - 2mm);
+            border: 1px solid var(--grid-main); border-radius: 50%;
+            font-size: 16px; color: var(--grid-main); background: #fff;
+        }
+
+        .word-char {
+            font-size: calc(var(--cell-size) * 0.65);
+            color: var(--char-color);
+        }
+        .word-char.trace { color: rgba(0,0,0,0.35); }
+
+>>>>>>> Stashed changes
 
         /* 遮罩层 */
         .overlay {
@@ -221,18 +290,22 @@
             .sidebar, .toolbar, #toast, .overlay { display: none !important; }
             .main, .stage { padding: 0; margin: 0; background: white; height: auto; display: block; }
             .sheet { 
+<<<<<<< Updated upstream
                 box-shadow: none; margin: 0; margin-bottom: 0 !important;
                 width: 210mm; height: 297mm; min-height: 0;
                 box-sizing: border-box;
                 page-break-inside: avoid; break-inside: avoid-page;
                 break-after: page; page-break-after: always;
+=======
+                box-shadow: none; margin: 0; page-break-after: always; 
+                width: 297mm; min-height: 210mm; 
+>>>>>>> Stashed changes
                 transform: none !important; /* 打印时必须还原比例 */
             }
             .sheet:last-child { break-after: auto; page-break-after: auto; }
         }
     </style>
     
-    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.min.js"></script>
 </head>
 <body>
 
@@ -274,8 +347,9 @@
                         <option value="mi">米字格</option>
                     </select>
                     <select id="density" onchange="render()" style="flex:1">
-                        <option value="6">6字/页</option>
-                        <option value="7">7字/页</option>
+                        <option value="6">6条/页</option>
+                        <option value="8" selected>8条/页</option>
+                        <option value="9">9条/页</option>
                     </select>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:4px;">
@@ -465,8 +539,22 @@
         const preview = document.getElementById('previewArea');
         const batchRow = document.getElementById('batchControlRow');
         const batchContainer = document.getElementById('batchContainer');
+<<<<<<< Updated upstream
         const BATCH_SIZE = 12;
         const COLS = 13;
+=======
+        const COLUMN_LAYOUT = [
+            { numberCol: 1, charCol: 3 },
+            { numberCol: 7, charCol: 9 },
+            { numberCol: 13, charCol: 15 },
+        ];
+        const HEADER_ROWS = 2;
+        const BLOCK_ROWS = 4;
+        const MAX_ROWS = 3;
+        const MAX_ASSIGNMENTS = COLUMN_LAYOUT.length * MAX_ROWS;
+        const circledNumbers = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳'.split('');
+        const BATCH_SIZE = 9;
+>>>>>>> Stashed changes
         let timer;
         let renderToken = 0;
         let lastFailedChars = new Set();
@@ -563,7 +651,11 @@
 
         function handleSelection(t, c) {
             batchContainer.innerHTML = '';
+<<<<<<< Updated upstream
             if (c.length <= 15) {
+=======
+            if (c.length <= BATCH_SIZE) {
+>>>>>>> Stashed changes
                 batchRow.style.display = 'none'; inputStr.value = c;
                 document.getElementById('docTitle').innerText = t; render(); return;
             }
@@ -583,6 +675,7 @@
             batchContainer.firstChild.click();
         }
 
+<<<<<<< Updated upstream
         async function render() {
             const token = ++renderToken;
             const str = inputStr.value.replace(/[^\u4e00-\u9fa5]/g,'');
@@ -612,9 +705,27 @@
                     if (!placeholdersByChar.has(char)) placeholdersByChar.set(char, []);
                     placeholdersByChar.get(char).push({ ph, content });
                 });
+=======
+        function render() {
+            const units = parseUnits();
+            const type = document.getElementById('gridType').value;
+            const mode = document.getElementById('mode').value;
+            const density = Math.min(parseInt(document.getElementById('density').value, 10), MAX_ASSIGNMENTS);
+
+            preview.innerHTML = '';
+            const perPage = density || MAX_ASSIGNMENTS;
+            const pages = Math.max(1, Math.ceil(units.length / perPage));
+            for(let p=0; p<pages; p++) {
+                const { sheet, paper } = createSheet(type);
+                const slice = units.slice(p*perPage, (p+1)*perPage);
+                for(let i=0; i<perPage; i++) {
+                    placeAssignment(paper, i, slice[i] || '', mode);
+                }
+>>>>>>> Stashed changes
                 preview.appendChild(sheet);
             }
 
+<<<<<<< Updated upstream
             // 预取：限制并发，避免网络拥塞导致“加载失败”
             const uniqueChars = Array.from(placeholdersByChar.keys());
             const total = uniqueChars.length;
@@ -665,6 +776,71 @@
             setLoadStatus(`重试中…（${failedChars.length}字）`);
             failedChars.forEach((c) => { charCache.delete(c); inflightChar.delete(c); });
             await render();
+=======
+        function parseUnits() {
+            const raw = inputStr.value.trim();
+            if(!raw) return [];
+            if(/[\\s,，、]/.test(raw)) {
+                return raw.split(/[\\s,，、]+/).map(s => s.replace(/[^\u4e00-\u9fa5]/g,'')).filter(Boolean);
+            }
+            const clean = raw.replace(/[^\u4e00-\u9fa5]/g,'');
+            return Array.from(new Set(clean.split('')));
+        }
+
+        function createSheet(type) {
+            const sheet = document.createElement('div');
+            sheet.className = 'sheet';
+            sheet.innerHTML = `<div class="sheet-info"><span>${document.getElementById('docTitle').innerText}</span><span>班级：________</span><span>姓名：________</span><span>得分：________</span></div>`;
+            const paper = document.createElement('div');
+            paper.className = `paper${type==='mi' ? ' mi-grid' : ''}`;
+            addDateHelpers(paper);
+            sheet.appendChild(paper);
+            return { sheet, paper };
+        }
+
+        function addDateHelpers(paper) {
+            const helpers = [
+                { text: '日 期', col: 2 },
+                { text: '年', col: 8 },
+                { text: '月', col: 12 },
+                { text: '日', col: 16 }
+            ];
+            helpers.forEach(h => {
+                const cell = document.createElement('div');
+                cell.className = 'grid-item date-helper';
+                cell.style.gridColumn = `${h.col}`;
+                cell.style.gridRow = '2';
+                cell.innerText = h.text;
+                paper.appendChild(cell);
+            });
+        }
+
+        function placeAssignment(paper, idx, word, mode) {
+            if(idx >= MAX_ASSIGNMENTS) return;
+            const colIdx = idx % COLUMN_LAYOUT.length;
+            const rowIdx = Math.floor(idx / COLUMN_LAYOUT.length);
+            const config = COLUMN_LAYOUT[colIdx];
+            const rowStart = HEADER_ROWS + rowIdx * BLOCK_ROWS + 1;
+
+            const numCell = document.createElement('div');
+            numCell.className = 'grid-item circled-number';
+            numCell.textContent = circledNumbers[idx] || `(${idx+1})`;
+            numCell.style.gridColumn = config.numberCol;
+            numCell.style.gridRow = rowStart;
+            paper.appendChild(numCell);
+
+            const chars = word ? Array.from(word.replace(/[^\u4e00-\u9fa5]/g,'')) : [];
+            if(chars.length === 0 && word) chars.push(word); // fallback for特殊字符
+
+            chars.slice(0, BLOCK_ROWS).forEach((ch, offset) => {
+                const cell = document.createElement('div');
+                cell.className = `grid-item word-char${mode==='trace' ? ' trace' : ''}`;
+                cell.innerText = ch;
+                cell.style.gridColumn = config.charCol;
+                cell.style.gridRow = rowStart + offset;
+                paper.appendChild(cell);
+            });
+>>>>>>> Stashed changes
         }
 
         function createBlock(char, data, mode, type) {
