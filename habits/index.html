@@ -104,21 +104,13 @@
 练字：生字 2 行</textarea>
             </div>
             <div class="control-card">
-                <label class="label">积分周期</label>
+                <label class="label">积分周期（天数）</label>
                 <div class="row">
                     <div>
-                        <select id="days">
-                            <option value="7" selected>7 天</option>
-                            <option value="14">14 天</option>
-                            <option value="21">21 天</option>
-                        </select>
+                        <input id="days" type="number" min="1" max="31" value="7" placeholder="如：7">
                     </div>
                     <div>
-                        <select id="reward">
-                            <option value="贴纸奖励" selected>贴纸奖励</option>
-                            <option value="周末小礼物">周末小礼物</option>
-                            <option value="亲子活动">亲子活动</option>
-                        </select>
+                        <input id="reward" placeholder="奖励内容，如贴纸">
                     </div>
                 </div>
             </div>
@@ -158,8 +150,9 @@
         function render() {
             const kid = (els.kid.value || '').trim() || '小朋友';
             const tasks = els.tasks.value.split(/\n+/).map(s => s.trim()).filter(Boolean);
-            const days = parseInt(els.days.value, 10);
-            const reward = els.reward.value;
+            const rawDays = parseInt(els.days.value, 10);
+            const days = Math.min(31, Math.max(1, Number.isNaN(rawDays) ? 7 : rawDays));
+            const reward = (els.reward.value || '').trim();
 
             const taskList = tasks.slice(0, 10).map((t) => `
                 <div class="task"><span>${t}</span><div class="box" aria-hidden="true"></div></div>
@@ -181,7 +174,6 @@
                         ${taskList}
                     </div>
                     <div class="panel">
-                        <h3>积分打卡（完成一天盖章/贴纸）</h3>
                         <div class="score-grid">${score}</div>
                         <div style="margin-top:10px;color:var(--muted);font-size:12px;line-height:1.4;">
                             建议规则：完成 1 项 +1 分；全部完成 +2 分；周末兑换奖励。
