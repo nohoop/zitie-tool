@@ -362,9 +362,7 @@
             margin-left: 6px;
         }
 
-        .answers {
-            page-break-before: always;
-        }
+        .answers { }
 
         .hint {
             margin-top: 10px;
@@ -400,11 +398,25 @@
         }
 
         @media print {
+            @page { size: A4 portrait; margin: 0; }
+            html, body { width: 210mm; margin: 0; padding: 0; }
             body { display: block; background: #fff; }
             .sidebar, .menu-btn, .overlay { display: none !important; }
             .main { padding: 0; display: block; overflow: visible; }
-            .sheet { box-shadow: none; border: none; border-radius: 0; width: 210mm; min-height: 297mm; margin: 0; transform: none !important; }
-            .sheet + .sheet { page-break-before: always; }
+            .sheet {
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+                width: 210mm;
+                height: 297mm;
+                min-height: 0;
+                margin: 0;
+                box-sizing: border-box;
+                transform: none !important;
+                break-after: page;
+                page-break-after: always;
+            }
+            .sheet:last-child { break-after: auto; page-break-after: auto; }
             .only-questions .answers { display: none !important; }
         }
 
