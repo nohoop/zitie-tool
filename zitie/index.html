@@ -292,15 +292,54 @@
 
         // 核心逻辑
         const charCache = new Map();
+        const CHAR_DATA_SOURCES = [
+            (c) => `https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`,
+            (c) => `https://npm.elemecdn.com/hanzi-writer-data@2.0/${c}.json`,
+            (c) => `https://unpkg.com/hanzi-writer-data@2.0/${c}.json`,
+        ];
+
+        async function fetchCharDataFromCDN(char) {
+            let lastError;
+            for (const mk of CHAR_DATA_SOURCES) {
+                const url = mk(char);
+                try {
+                    const res = await fetch(url, { cache: 'force-cache' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                } catch (e) {
+                    lastError = e;
+                }
+            }
+            throw lastError || new Error('Failed to load character data');
+        }
+
+        async function loadCharData(char) {
+            if (charCache.has(char)) return charCache.get(char);
+
+            const hanziWriter = window.HanziWriter;
+            if (hanziWriter && typeof hanziWriter.loadCharacterData === 'function') {
+                const data = await hanziWriter.loadCharacterData(char);
+                charCache.set(char, data);
+                return data;
+            }
+
+            const data = await fetchCharDataFromCDN(char);
+            charCache.set(char, data);
+            return data;
+        }
+
         window.HanziWriterDefaultOptions = {
             charDataLoader: async (c, ok, err) => {
-                if (charCache.has(c)) { ok(charCache.get(c)); return; }
-                const sources = [`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${c}.json`, `https://npm.elemecdn.com/hanzi-writer-data@2.0/${c}.json`];
-                try { const r = await Promise.any(sources.map(u => fetch(u).then(r=>{if(!r.ok)throw 0;return r.json()}))); charCache.set(c, r); ok(r); } catch { err(); }
+                try {
+                    const data = await loadCharData(c);
+                    ok(data);
+                } catch {
+                    err();
+                }
             }
         };
 
-        const { pinyin } = pinyinPro || { pinyin: c=>c };
+        const { pinyin } = window.pinyinPro || { pinyin: (c) => c };
         const menuRoot = document.getElementById('menuRoot');
         const inputStr = document.getElementById('inputStr');
         const preview = document.getElementById('previewArea');
@@ -380,7 +419,7 @@
                 await Promise.all(slice.map(async (char) => {
                     const ph = document.createElement('div'); content.appendChild(ph);
                     try {
-                        const data = await HanziWriter.loadCharacterData(char);
+                        const data = await loadCharData(char);
                         content.replaceChild(createBlock(char, data, mode, type), ph);
                     } catch { ph.innerText = '加载失败'; }
                 }));
