@@ -193,17 +193,21 @@
         }
 
         @media print {
-            @page { size: A4 portrait; margin: 10mm; }
+            /* 关键：不要在 @page 里留边距，否则 210×297mm 的 .sheet 会溢出可打印区域，导致每张纸被拆成“内容页+空白页” */
+            @page { size: A4 portrait; margin: 0; }
+            html, body { width: 210mm; margin: 0; padding: 0; }
             body { display: block; height: auto; overflow: visible; background: #fff; }
             .sidebar, .toolbar, #toast, .overlay { display: none !important; }
             .main, .stage { padding: 0; margin: 0; background: white; height: auto; display: block; }
             .sheet { 
                 box-shadow: none; margin: 0; margin-bottom: 0 !important;
-                page-break-after: auto; break-after: auto;
-                width: 210mm; min-height: 297mm; 
+                width: 210mm; height: 297mm; min-height: 0;
+                box-sizing: border-box;
+                page-break-inside: avoid; break-inside: avoid-page;
+                break-after: page; page-break-after: always;
                 transform: none !important; /* 打印时必须还原比例 */
             }
-            .sheet + .sheet { page-break-before: always; break-before: page; }
+            .sheet:last-child { break-after: auto; page-break-after: auto; }
         }
     </style>
     
