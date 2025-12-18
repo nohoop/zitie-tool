@@ -307,14 +307,32 @@
         ];
 
         async function fetchJsonWithTimeout(url, { timeoutMs, cacheMode }) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            const fetchOpts = {};
+            if (cacheMode) fetchOpts.cache = cacheMode;
+
+            let timerId = 0;
+            let controller = null;
+            const canAbort = typeof AbortController !== 'undefined';
+            if (canAbort) {
+                controller = new AbortController();
+                fetchOpts.signal = controller.signal;
+            }
+
+            const timeoutPromise = new Promise((_, reject) => {
+                timerId = window.setTimeout(() => {
+                    try { controller?.abort(); } catch { /* ignore */ }
+                    reject(new Error('timeout'));
+                }, timeoutMs);
+            });
+
             try {
-                const res = await fetch(url, { signal: controller.signal, cache: cacheMode || 'default' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return await res.json();
+                const fetchPromise = fetch(url, fetchOpts).then(async (res) => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                });
+                return await Promise.race([fetchPromise, timeoutPromise]);
             } finally {
-                clearTimeout(timer);
+                window.clearTimeout(timerId);
             }
         }
 
@@ -451,7 +469,7 @@
 
             // 预取：限制并发，避免网络拥塞导致“加载失败”
             const uniqueChars = Array.from(placeholdersByChar.keys());
-            await mapWithConcurrency(uniqueChars, 6, async (char) => {
+            await mapWithConcurrency(uniqueChars, 4, async (char) => {
                 try {
                     const data = await loadCharData(char);
                     if (token !== renderToken) return;
