@@ -102,6 +102,7 @@
         }
         .control-row { display: flex; flex-direction: column; gap: 4px; }
         .lbl { font-size: 11px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; }
+        .density-hint { font-size: 11px; color: var(--text-sec); margin-top: 2px; min-height: 14px; }
         
         .batch-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
         .batch-btn { font-size: 12px; padding: 6px 12px; border-radius: 14px; border: 1px solid #d2d2d7; background: #f5f5f7; color: #333; cursor: pointer; }
@@ -294,12 +295,11 @@
                         <option value="tian">田字格</option>
                         <option value="mi">米字格</option>
                     </select>
-                    <select id="density" onchange="render()" style="flex:1">
-                        <option value="6">6条/页</option>
+                    <select id="density" data-default="12" onchange="render()" style="flex:1">
                         <option value="8" selected>8条/页</option>
-                        <option value="9">9条/页</option>
                     </select>
                 </div>
+                <div class="density-hint" id="densityHint"></div>
                 <div style="display:flex; gap:8px; margin-top:4px;">
                     <select id="mode" onchange="render()" style="flex:1">
                         <option value="progressive">渐隐</option>
@@ -489,30 +489,96 @@
         const batchContainer = document.getElementById('batchContainer');
         const BATCH_SIZE = 12;
         const COLS = 13;
+        const densitySelect = document.getElementById('density');
+        const densityHint = document.getElementById('densityHint');
+        const defaultDensity = densitySelect ? parseInt(densitySelect.dataset.default || '12', 10) : 12;
+        let maxRowsPerPage = 0;
+        const SHEET_HEIGHT_MM = 297;
+        const PADDING_TOP_MM = 15;
+        const PADDING_BOTTOM_MM = 15;
+        const HEADER_HEIGHT_MM = 14;
+        const HEADER_SPACING_MM = 3;
+        const PINYIN_HEIGHT_MM = 3.5;
+        const MIN_GRID_MM = 8;
         let timer;
         let renderToken = 0;
         let lastFailedChars = new Set();
 
-        function updateGridMetrics(density) {
-            const SHEET_HEIGHT_MM = 297;
-            const PADDING_TOP_MM = 15;
-            const PADDING_BOTTOM_MM = 15;
-            const HEADER_HEIGHT_MM = 14;
-            const HEADER_SPACING_MM = 3;
-            const PINYIN_HEIGHT_MM = 3.5;
-            const MAX_GRID_MM = 13;
-            const MIN_GRID_MM = 8;
-            const blockGap = density >= 9 ? 2.6 : density >= 8 ? 3.2 : 4;
+        function blockGapForDensity(density) {
+            if (density >= 16) return 1.8;
+            if (density >= 13) return 2.2;
+            if (density >= 10) return 2.6;
+            if (density >= 8) return 3.0;
+            return 4;
+        }
+
+        function computeGridMetrics(density) {
+            const blockGap = blockGapForDensity(density);
             const usableHeight = SHEET_HEIGHT_MM - PADDING_TOP_MM - PADDING_BOTTOM_MM - HEADER_HEIGHT_MM - HEADER_SPACING_MM;
             const totalGap = Math.max(0, density - 1) * blockGap;
             const rowHeight = (usableHeight - totalGap) / density;
             const computedGrid = rowHeight - PINYIN_HEIGHT_MM;
-            const gridSize = Math.max(MIN_GRID_MM, Math.min(computedGrid, MAX_GRID_MM));
+            return { blockGap, computedGrid, gridSize: Math.max(computedGrid, MIN_GRID_MM) };
+        }
+
+        function calculateMaxRows() {
+            let maxRows = 6;
+            for (let d = 6; d <= 24; d++) {
+                const { computedGrid } = computeGridMetrics(d);
+                if (computedGrid < MIN_GRID_MM) break;
+                maxRows = d;
+            }
+            return maxRows;
+        }
+
+        function ensureDensityWithinBounds(val) {
+            if (!maxRowsPerPage) maxRowsPerPage = calculateMaxRows();
+            if (val > maxRowsPerPage) return maxRowsPerPage;
+            if (val < 6) return 6;
+            return val;
+        }
+
+        function updateDensityHint(current) {
+            if (!densityHint) return;
+            if (!maxRowsPerPage) maxRowsPerPage = calculateMaxRows();
+            densityHint.textContent = `每页 ${current} 个字（最多 ${maxRowsPerPage} 行）`;
+        }
+
+        function buildDensityOptions() {
+            if (!densitySelect) return;
+            if (!maxRowsPerPage) maxRowsPerPage = calculateMaxRows();
+            const presets = [6,8,9,10,12,14,15,16,17];
+            const values = presets.filter(v => v <= maxRowsPerPage);
+            if (!values.includes(maxRowsPerPage)) values.push(maxRowsPerPage);
+            const unique = [...new Set(values)].sort((a,b)=>a-b);
+            const currentValue = parseInt(densitySelect.value, 10) || defaultDensity;
+            densitySelect.innerHTML = '';
+            unique.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = `${v} 条/页${v === maxRowsPerPage ? '（最大）' : ''}`;
+                densitySelect.appendChild(opt);
+            });
+            const target = ensureDensityWithinBounds(currentValue);
+            densitySelect.value = target;
+            updateDensityHint(target);
+        }
+
+        function updateGridMetrics(density) {
+            if (!densitySelect) return density;
+            density = ensureDensityWithinBounds(density);
+            if (densitySelect && parseInt(densitySelect.value, 10) !== density) {
+                densitySelect.value = density;
+            }
+            const { blockGap, gridSize } = computeGridMetrics(density);
             const rootStyle = document.documentElement.style;
             rootStyle.setProperty('--grid-size', `${gridSize.toFixed(2)}mm`);
             rootStyle.setProperty('--pinyin-height', `${PINYIN_HEIGHT_MM}mm`);
             rootStyle.setProperty('--block-gap', `${blockGap}mm`);
+            updateDensityHint(density);
+            return density;
         }
+        buildDensityOptions();
 
         const loadStatusEl = document.getElementById('loadStatus');
         const retryBtn = document.getElementById('retryBtn');
@@ -632,8 +698,8 @@
             const chars = Array.from(new Set(str.split('')));
             const mode = document.getElementById('mode').value;
             const type = document.getElementById('gridType').value;
-            const density = parseInt(document.getElementById('density').value, 10) || 8;
-            updateGridMetrics(density);
+            let density = parseInt(densitySelect.value, 10) || 8;
+            density = updateGridMetrics(density);
 
             preview.innerHTML = '';
             const pages = Math.ceil(chars.length / density);
