@@ -169,7 +169,8 @@
         }
 
         /* 内部格线 */
-        .sheet-header { height: 14mm; border-bottom: 2px solid var(--grid-main); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; margin-bottom: 4mm; font-family: "KaiTi", serif; font-size: 15px; color: #333; }
+        .sheet-header { height: 14mm; border-bottom: 2px solid var(--grid-main); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; margin-bottom: 4mm; font-family: "KaiTi", serif; font-size: 15px; color: #333; flex: 0 0 auto; }
+        .sheet-content { flex: 0 0 auto; }
         .underline { border-bottom: 1px solid #333; min-width: 40px; display: inline-block; text-align: center; }
         .char-block { margin-bottom: var(--block-gap); break-inside: avoid; }
         .char-block:last-child, .char-placeholder:last-child { margin-bottom: 0; }
@@ -180,7 +181,7 @@
         .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
         .char-placeholder { 
-            min-height: calc(var(--grid-size) * 2 + var(--pinyin-height) * 2);
+            min-height: calc(var(--grid-size) + var(--pinyin-height));
             margin-bottom: var(--block-gap);
             display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px;
         }
@@ -487,12 +488,13 @@
             const HEADER_SPACING_MM = 4;
             const PINYIN_HEIGHT_MM = 3.5;
             const MAX_GRID_MM = 13;
+            const MIN_GRID_MM = 8;
             const blockGap = density >= 9 ? 2.6 : density >= 8 ? 3.2 : 4;
             const usableHeight = SHEET_HEIGHT_MM - PADDING_TOP_MM - PADDING_BOTTOM_MM - HEADER_HEIGHT_MM - HEADER_SPACING_MM;
             const totalGap = Math.max(0, density - 1) * blockGap;
-            const rowHeight = (usableHeight - totalGap) / (density * 2);
+            const rowHeight = (usableHeight - totalGap) / density;
             const computedGrid = rowHeight - PINYIN_HEIGHT_MM;
-            const gridSize = computedGrid > 0 ? Math.min(computedGrid, MAX_GRID_MM) : 8;
+            const gridSize = Math.max(MIN_GRID_MM, Math.min(computedGrid, MAX_GRID_MM));
             const rootStyle = document.documentElement.style;
             rootStyle.setProperty('--grid-size', `${gridSize.toFixed(2)}mm`);
             rootStyle.setProperty('--pinyin-height', `${PINYIN_HEIGHT_MM}mm`);
@@ -698,21 +700,40 @@
 
         function createBlock(char, data, mode, type) {
             const blk = document.createElement('div'); blk.className = 'char-block';
-            const r1 = document.createElement('div'); r1.className = 'row';
-            for(let i=0; i<COLS; i++) {
-                let m='empty', s=-1; if(i===0)m='black'; else if(i<=data.strokes.length){m='step';s=i-1} else m='trace';
-                r1.appendChild(cell(data.strokes, pinyin(char), m, s, type, i===0));
+            const row = document.createElement('div'); row.className = 'row';
+            const strokes = data.strokes || [];
+            const py = pinyin(char);
+            for (let i = 0; i < COLS; i++) {
+                let m = 'empty';
+                let s = -1;
+                if (i === 0) {
+                    m = 'black';
+                } else if (i <= strokes.length) {
+                    m = 'step';
+                    s = i - 1;
+                } else {
+                    const practiceIdx = i - (strokes.length + 1);
+                    if (practiceIdx >= 0) {
+                        if (mode === 'progressive') {
+                            if (practiceIdx < 4) m = 'trace';
+                            else if (practiceIdx < 8) m = 'trace';
+                            else m = 'empty';
+                        } else {
+                            m = mode;
+                        }
+                    }
+                }
+                const cellEl = cell(strokes, py, m, s, type, i === 0);
+                if (m === 'trace' && mode === 'progressive') {
+                    const practiceIdx = i - (strokes.length + 1);
+                    if (practiceIdx >= 4) {
+                        const path = cellEl.querySelector('path');
+                        if (path) path.style.opacity = 0.3;
+                    }
+                }
+                row.appendChild(cellEl);
             }
-            blk.appendChild(r1);
-            const r2 = document.createElement('div'); r2.className = 'row'; r2.style.borderTop='none';
-            for(let i=0; i<COLS; i++) {
-                let m=(i===0)?'black':(mode==='progressive'?(i<4?'trace':(i<8?'trace':'empty')):mode);
-                let op=(m==='trace' && mode==='progressive' && i>=4)?0.3:1;
-                const c = cell(data.strokes, '', m, -1, type, false);
-                if(m==='trace') c.querySelector('path').style.opacity=op;
-                r2.appendChild(c);
-            }
-            blk.appendChild(r2);
+            blk.appendChild(row);
             return blk;
         }
 
