@@ -19,6 +19,9 @@
             --grid-main: #2c8a4c;
             --grid-sub: #a1dcb6;
             --char-color: #333;
+            --grid-size: 13mm;
+            --pinyin-height: 4.5mm;
+            --block-gap: 4mm;
         }
 
         body {
@@ -168,14 +171,19 @@
         /* 内部格线 */
         .sheet-header { height: 14mm; border-bottom: 2px solid var(--grid-main); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; margin-bottom: 4mm; font-family: "KaiTi", serif; font-size: 15px; color: #333; }
         .underline { border-bottom: 1px solid #333; min-width: 40px; display: inline-block; text-align: center; }
-        .char-block { margin-bottom: 4mm; break-inside: avoid; }
-        .row { display: flex; height: 17mm; border-left: 1px solid var(--grid-main); }
-        .cell { width: 13mm; height: 100%; position: relative; border-right: 1px solid var(--grid-main); border-bottom: 1px solid var(--grid-main); border-top: 1px solid var(--grid-main); display: flex; flex-direction: column; }
-        .pinyin { height: 4.5mm; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #666; font-family: Arial; border-bottom: 1px dashed var(--grid-sub); }
+        .char-block { margin-bottom: var(--block-gap); break-inside: avoid; }
+        .char-block:last-child, .char-placeholder:last-child { margin-bottom: 0; }
+        .row { display: flex; height: calc(var(--grid-size) + var(--pinyin-height)); border-left: 1px solid var(--grid-main); }
+        .cell { width: var(--grid-size); height: 100%; position: relative; border-right: 1px solid var(--grid-main); border-bottom: 1px solid var(--grid-main); border-top: 1px solid var(--grid-main); display: flex; flex-direction: column; }
+        .pinyin { height: var(--pinyin-height); display: flex; align-items: center; justify-content: center; font-size: 9px; color: #666; font-family: Arial; border-bottom: 1px dashed var(--grid-sub); }
         .hanzi { flex: 1; position: relative; }
         .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
         .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
-        .char-placeholder { min-height: 38mm; display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px; }
+        .char-placeholder { 
+            min-height: calc(var(--grid-size) * 2 + var(--pinyin-height) * 2);
+            margin-bottom: var(--block-gap);
+            display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px;
+        }
 
         /* 遮罩层 */
         .overlay {
@@ -471,6 +479,26 @@
         let renderToken = 0;
         let lastFailedChars = new Set();
 
+        function updateGridMetrics(density) {
+            const SHEET_HEIGHT_MM = 297;
+            const PADDING_TOP_MM = 15;
+            const PADDING_BOTTOM_MM = 15;
+            const HEADER_HEIGHT_MM = 14;
+            const HEADER_SPACING_MM = 4;
+            const PINYIN_HEIGHT_MM = 3.5;
+            const MAX_GRID_MM = 13;
+            const blockGap = density >= 9 ? 2.6 : density >= 8 ? 3.2 : 4;
+            const usableHeight = SHEET_HEIGHT_MM - PADDING_TOP_MM - PADDING_BOTTOM_MM - HEADER_HEIGHT_MM - HEADER_SPACING_MM;
+            const totalGap = Math.max(0, density - 1) * blockGap;
+            const rowHeight = (usableHeight - totalGap) / (density * 2);
+            const computedGrid = rowHeight - PINYIN_HEIGHT_MM;
+            const gridSize = computedGrid > 0 ? Math.min(computedGrid, MAX_GRID_MM) : 8;
+            const rootStyle = document.documentElement.style;
+            rootStyle.setProperty('--grid-size', `${gridSize.toFixed(2)}mm`);
+            rootStyle.setProperty('--pinyin-height', `${PINYIN_HEIGHT_MM}mm`);
+            rootStyle.setProperty('--block-gap', `${blockGap}mm`);
+        }
+
         const loadStatusEl = document.getElementById('loadStatus');
         const retryBtn = document.getElementById('retryBtn');
 
@@ -589,7 +617,8 @@
             const chars = Array.from(new Set(str.split('')));
             const mode = document.getElementById('mode').value;
             const type = document.getElementById('gridType').value;
-            const density = parseInt(document.getElementById('density').value);
+            const density = parseInt(document.getElementById('density').value, 10) || 8;
+            updateGridMetrics(density);
 
             preview.innerHTML = '';
             const pages = Math.ceil(chars.length / density);
