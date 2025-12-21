@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凑十法：9 加几 - YoBox</title>
+    <style>
+        :root {
+            --bg: #fdf6ec;
+            --paper: #fffdf5;
+            --ink: #1d1d1f;
+            --muted: #6e6e73;
+            --accent: #ff8c42;
+            --blue: #3a7bd5;
+            --green: #5fb36a;
+            --border: #f2c998;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Text", sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.6;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(0deg, rgba(255, 200, 145, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 200, 145, 0.08) 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: -1;
+        }
+        main {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: clamp(18px, 4vw, 40px);
+        }
+        .sheet {
+            background: var(--paper);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 185, 110, 0.5);
+            box-shadow: 0 18px 45px rgba(255, 186, 125, 0.2);
+            padding: clamp(18px, 3vw, 36px);
+            position: relative;
+        }
+        .sheet::before {
+            content: "";
+            position: absolute;
+            inset: 14px;
+            border: 1px dashed rgba(255, 165, 90, 0.35);
+            border-radius: 20px;
+            pointer-events: none;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            align-items: center;
+        }
+        .hero-left {
+            padding-right: min(20px, 2vw);
+        }
+        .hero .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--blue);
+            background: rgba(58, 123, 213, 0.12);
+        }
+        h1 {
+            font-size: clamp(26px, 5vw, 36px);
+            margin: 12px 0 4px;
+            letter-spacing: -0.5px;
+        }
+        .hero p {
+            margin: 8px 0 12px;
+            color: #4a4a4e;
+        }
+        .hero-steps {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .hero-steps li {
+            flex: 1 1 180px;
+            border: 1px solid rgba(26, 115, 232, 0.25);
+            border-radius: 14px;
+            padding: 10px 14px;
+            background: rgba(58, 123, 213, 0.08);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .hero-card {
+            background: linear-gradient(135deg, rgba(255, 207, 134, 0.95), rgba(255, 233, 195, 0.9));
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid rgba(255, 185, 110, 0.65);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+        .hero-card h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+        .hero-card p {
+            margin: 8px 0 12px;
+            font-size: 15px;
+        }
+        .formula {
+            font-size: 24px;
+            font-weight: 800;
+            text-align: center;
+            font-family: "Yuanti SC", "KaiTi", serif;
+            color: #8a4100;
+        }
+        .toolbar {
+            margin: 26px 0 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .toolbar .tip {
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        button:active { transform: scale(0.97); }
+        .btn-secondary {
+            background: rgba(58, 123, 213, 0.12);
+            color: var(--blue);
+        }
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+            box-shadow: 0 10px 20px rgba(58, 123, 213, 0.25);
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            border: 2px solid rgba(255, 190, 120, 0.4);
+            padding: 16px;
+            box-shadow: 0 6px 16px rgba(255, 170, 88, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            border: 1px dashed rgba(255, 205, 159, 0.6);
+            border-radius: 14px;
+            pointer-events: none;
+        }
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 20px;
+            font-weight: 800;
+            color: #854300;
+            position: relative;
+            z-index: 1;
+        }
+        .badge {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(94, 186, 125, 0.18);
+            color: var(--green);
+            border: 1px solid rgba(94, 186, 125, 0.4);
+        }
+        .ten-frame {
+            background: #fff7e8;
+            border-radius: 14px;
+            border: 1.5px solid var(--border);
+            padding: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .frame-row {
+            display: grid;
+            grid-template-columns: repeat(5, 28px);
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .cell {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            background: white;
+        }
+        .cell-nine { background: rgba(255, 145, 0, 0.85); border-color: rgba(255, 145, 0, 0.5); }
+        .cell-new { background: rgba(94, 186, 125, 0.85); border-color: rgba(94, 186, 125, 0.5); }
+        .frame-note {
+            text-align: center;
+            font-size: 13px;
+            color: #6b4b22;
+        }
+        .rest-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .cell-rest {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(58, 123, 213, 0.8);
+            border: 1.5px solid rgba(58, 123, 213, 0.4);
+        }
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .step {
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 240, 210, 0.6);
+            border-radius: 12px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 205, 150, 0.6);
+        }
+        .step-idx {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: rgba(58, 123, 213, 0.12);
+            color: var(--blue);
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .math {
+            font-weight: 800;
+            font-size: 18px;
+            font-family: "Yuanti SC", "KaiTi", serif;
+        }
+        .hint {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 3px 0 0;
+        }
+        .result {
+            background: rgba(94, 186, 125, 0.15);
+            border: 1.5px solid rgba(94, 186, 125, 0.6);
+            border-radius: 14px;
+            padding: 10px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            color: #2f7c30;
+            font-family: "Yuanti SC", "KaiTi", serif;
+            position: relative;
+            z-index: 1;
+        }
+        .result small {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        @media (max-width: 640px) {
+            .hero-steps { flex-direction: column; }
+            .hero-steps li { flex: 1; }
+            button { width: 100%; text-align: center; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar .actions { width: 100%; flex-direction: column; }
+        }
+        @media print {
+            body { background: white; }
+            body::before { display: none; }
+            .sheet {
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+            }
+            .sheet::before, .card::before { display: none; }
+            button, .toolbar { display: none; }
+            main { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="sheet">
+            <section class="hero">
+                <div class="hero-left">
+                    <div class="tag">一年级数学 · 凑十法</div>
+                    <h1>9 加几，先凑十</h1>
+                    <p>把“后面的数”拆出 1，先跟 9 凑成 10，再加剩下的。这样思路清晰、写得也快。</p>
+                    <ul class="hero-steps">
+                        <li>① 拆开：把要加的数拆成 <strong>1 + 剩余</strong></li>
+                        <li>② 凑十：9 + 1 = 10，写下整十</li>
+                        <li>③ 再相加：用 10 加上“剩余”得到答案</li>
+                    </ul>
+                </div>
+                <div class="hero-card">
+                    <h2>口诀小黑板</h2>
+                    <p>见到 9 加几，先把几个拆 1 出来补十。补完十，再加剩下的几个就好了。</p>
+                    <div class="formula">9 + (1 + □) = 10 + □</div>
+                </div>
+            </section>
+
+            <div class="toolbar">
+                <p class="tip">提示：先让孩子自己说步骤，再写答案，更像教科书里的例题。</p>
+                <div class="actions">
+                    <button class="btn-secondary" type="button" id="shuffle">换一换顺序</button>
+                    <button class="btn-primary" type="button" onclick="window.print()">打印整页</button>
+                </div>
+            </div>
+
+            <section class="cards" id="cards" aria-live="polite"></section>
+        </div>
+    </main>
+
+    <script>
+        const baseList = [2, 3, 4, 5, 6, 7, 8, 9];
+        let currentList = [...baseList];
+
+        const cardsEl = document.getElementById('cards');
+        const shuffleBtn = document.getElementById('shuffle');
+
+        function render() {
+            cardsEl.innerHTML = currentList.map(makeCard).join('');
+        }
+
+        function makeCard(n) {
+            const rest = n - 1;
+            const total = 9 + n;
+            const restHint = rest ? `还剩 ${rest} 个` : '没有剩下的了';
+            return `
+                <article class="card">
+                    <div class="card-head">
+                        <span class="badge">课堂例题</span>
+                        <span>9 + ${n}</span>
+                    </div>
+                    ${tenFrame(rest)}
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-idx">①</div>
+                            <div>
+                                <p>拆一拆：<span class="math">${n} = 1 + ${rest}</span></p>
+                                <p class="hint">把 1 留给 9，剩下 ${rest} 后面再加。</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-idx">②</div>
+                            <div>
+                                <p>先凑十：<span class="math">9 + 1 = 10</span></p>
+                                <p class="hint">十个凑齐，写成整十最容易。</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-idx">③</div>
+                            <div>
+                                <p>再相加：<span class="math">10 + ${rest} = ${total}</span></p>
+                                <p class="hint">${restHint} 加到 10 上。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result">
+                        9 + ${n} = ${total}
+                        <small>记得读：先凑十，再加剩下的 ${rest}。</small>
+                    </div>
+                </article>
+            `;
+        }
+
+        function tenFrame(rest) {
+            const row = Array.from({ length: 10 }, (_, idx) => {
+                const cls = ['cell', idx < 9 ? 'cell-nine' : 'cell-new'].join(' ');
+                return `<span class="${cls}"></span>`;
+            }).join('');
+            const restRow = rest ? Array.from({ length: rest }, () => '<span class="cell-rest"></span>').join('') : '<span class="hint">没有剩余</span>';
+            return `
+                <div class="ten-frame">
+                    <div class="frame-row">${row}</div>
+                    <div class="frame-note">9 个桔子先排好，再拿出 1 个补上去。</div>
+                    <div class="rest-row">${restRow}</div>
+                    <div class="frame-note">剩下的再和 10 相加。</div>
+                </div>
+            `;
+        }
+
+        shuffleBtn.addEventListener('click', () => {
+            currentList = [...baseList].sort(() => Math.random() - 0.5);
+            render();
+        });
+
+        render();
+    </script>
+</body>
+</html>
