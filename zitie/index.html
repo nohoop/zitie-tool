@@ -22,6 +22,8 @@
             --grid-size: 13mm;
             --pinyin-height: 4.5mm;
             --block-gap: 4mm;
+            --header-height: 14mm;
+            --header-gap: 3mm;
         }
 
         body {
@@ -169,9 +171,20 @@
         }
 
         /* 内部格线 */
-        .sheet-header { height: 14mm; border-bottom: 2px solid var(--grid-main); display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 4px; margin-bottom: 4mm; font-family: "KaiTi", serif; font-size: 15px; color: #333; flex: 0 0 auto; }
+        .sheet-header { 
+            height: var(--header-height); 
+            min-height: var(--header-height);
+            border-bottom: 1.4px solid var(--grid-main); 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            padding-bottom: 1.2mm; margin-bottom: var(--header-gap); 
+            font-family: "KaiTi", serif; font-size: 15px; color: #333; 
+            flex: 0 0 auto; box-sizing: border-box;
+        }
+        .sheet-title { font-weight: 600; letter-spacing: 0.5px; }
+        .sheet-meta { display: flex; align-items: flex-end; gap: 12px; font-size: 14px; }
+        .sheet-meta div { display: inline-flex; align-items: flex-end; gap: 4px; }
         .sheet-content { flex: 0 0 auto; }
-        .underline { border-bottom: 1px solid #333; min-width: 40px; display: inline-block; text-align: center; }
+        .underline { border-bottom: 1px solid var(--grid-main); min-width: 32mm; display: inline-block; text-align: center; height: 1.2em; }
         .char-block { margin-bottom: var(--block-gap); break-inside: avoid; }
         .char-block:last-child, .char-placeholder:last-child { margin-bottom: 0; }
         .row { display: flex; height: calc(var(--grid-size) + var(--pinyin-height)); border-left: 1px solid var(--grid-main); }
@@ -485,7 +498,7 @@
             const PADDING_TOP_MM = 15;
             const PADDING_BOTTOM_MM = 15;
             const HEADER_HEIGHT_MM = 14;
-            const HEADER_SPACING_MM = 4;
+            const HEADER_SPACING_MM = 3;
             const PINYIN_HEIGHT_MM = 3.5;
             const MAX_GRID_MM = 13;
             const MIN_GRID_MM = 8;
@@ -631,7 +644,8 @@
             setLoadStatus('准备加载…');
             for(let p=0; p<pages; p++) {
                 const sheet = document.createElement('div'); sheet.className = 'sheet';
-                sheet.innerHTML = `<div class="sheet-header"><div>${document.getElementById('docTitle').innerText}</div><div>日期:___ 评分:___</div></div><div class="sheet-content"></div>`;
+                const title = document.getElementById('docTitle').innerText;
+                sheet.innerHTML = `<div class="sheet-header"><div class="sheet-title">${title}</div><div class="sheet-meta"><div>日期:<span class="underline"></span></div><div>评分:<span class="underline"></span></div></div></div><div class="sheet-content"></div>`;
                 const content = sheet.querySelector('.sheet-content');
                 const slice = chars.slice(p*density, (p+1)*density);
 
@@ -704,32 +718,23 @@
             const strokes = data.strokes || [];
             const py = pinyin(char);
             for (let i = 0; i < COLS; i++) {
-                let m = 'empty';
-                let s = -1;
+                const practiceIdx = i - (strokes.length + 1);
+                let cellMode = 'trace';
+                let stepIndex = -1;
                 if (i === 0) {
-                    m = 'black';
+                    cellMode = 'black';
                 } else if (i <= strokes.length) {
-                    m = 'step';
-                    s = i - 1;
+                    cellMode = 'step';
+                    stepIndex = i - 1;
                 } else {
-                    const practiceIdx = i - (strokes.length + 1);
-                    if (practiceIdx >= 0) {
-                        if (mode === 'progressive') {
-                            if (practiceIdx < 4) m = 'trace';
-                            else if (practiceIdx < 8) m = 'trace';
-                            else m = 'empty';
-                        } else {
-                            m = mode;
-                        }
-                    }
+                    cellMode = mode === 'progressive' || mode === 'trace' ? 'trace' : mode;
                 }
-                const cellEl = cell(strokes, py, m, s, type, i === 0);
-                if (m === 'trace' && mode === 'progressive') {
-                    const practiceIdx = i - (strokes.length + 1);
-                    if (practiceIdx >= 4) {
-                        const path = cellEl.querySelector('path');
-                        if (path) path.style.opacity = 0.3;
-                    }
+                const cellEl = cell(strokes, py, cellMode, stepIndex, type, i === 0);
+                if (practiceIdx >= 0 && cellMode === 'trace') {
+                    const opacity = mode === 'progressive'
+                        ? Math.max(0.2, 0.95 - practiceIdx * 0.1)
+                        : 0.95;
+                    cellEl.querySelectorAll('.char-svg path').forEach(path => { path.style.opacity = opacity; });
                 }
                 row.appendChild(cellEl);
             }
