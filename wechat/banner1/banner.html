@@ -283,8 +283,8 @@
             <div class="field sm-6">
               <label>风格</label>
               <div class="seg" role="group" aria-label="style">
-                <button type="button" id="styleAuto" aria-pressed="true">自动</button>
-                <button type="button" id="styleSolid" aria-pressed="false">纯色</button>
+                <button type="button" id="styleAuto" aria-pressed="false">自动</button>
+                <button type="button" id="styleSolid" aria-pressed="true">纯色</button>
                 <button type="button" id="styleClear" aria-pressed="false">清爽</button>
               </div>
             </div>
@@ -350,7 +350,7 @@
         objectUrl: null,
         outW: 900,
         outH: 383,
-        style: "auto", // auto | solid | clear
+        style: "solid", // auto | solid | clear
         readability: "normal", // normal | strong | max
         pos: "center", // left | center | right
         offsetX: 0,
@@ -393,6 +393,105 @@
         const x = (dstW - drawW) / 2;
         const y = (dstH - drawH) / 2;
         return { x, y, w: drawW, h: drawH };
+      }
+
+      function rgbToHex(r, g, b) {
+        const toHex = (n) => n.toString(16).padStart(2, "0");
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      }
+
+      function rgbToHsl(r, g, b) {
+        const rr = r / 255;
+        const gg = g / 255;
+        const bb = b / 255;
+        const max = Math.max(rr, gg, bb);
+        const min = Math.min(rr, gg, bb);
+        const d = max - min;
+
+        let h = 0;
+        if (d !== 0) {
+          if (max === rr) h = ((gg - bb) / d) % 6;
+          else if (max === gg) h = (bb - rr) / d + 2;
+          else h = (rr - gg) / d + 4;
+          h *= 60;
+          if (h < 0) h += 360;
+        }
+
+        const l = (max + min) / 2;
+        const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+        return { h, s, l };
+      }
+
+      function hslToRgb(h, s, l) {
+        const c = (1 - Math.abs(2 * l - 1)) * s;
+        const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+        const m = l - c / 2;
+        let rr = 0,
+          gg = 0,
+          bb = 0;
+        if (h >= 0 && h < 60) [rr, gg, bb] = [c, x, 0];
+        else if (h >= 60 && h < 120) [rr, gg, bb] = [x, c, 0];
+        else if (h >= 120 && h < 180) [rr, gg, bb] = [0, c, x];
+        else if (h >= 180 && h < 240) [rr, gg, bb] = [0, x, c];
+        else if (h >= 240 && h < 300) [rr, gg, bb] = [x, 0, c];
+        else [rr, gg, bb] = [c, 0, x];
+        return {
+          r: Math.round((rr + m) * 255),
+          g: Math.round((gg + m) * 255),
+          b: Math.round((bb + m) * 255),
+        };
+      }
+
+      function pickSolidBgFromImage(img) {
+        // Sample a small center-crop to get a stable "overall tone".
+        const sampleSize = 48;
+        const off = document.createElement("canvas");
+        off.width = sampleSize;
+        off.height = sampleSize;
+        const octx = off.getContext("2d", { willReadFrequently: true });
+
+        const srcW = img.naturalWidth;
+        const srcH = img.naturalHeight;
+        const crop = Math.min(srcW, srcH);
+        const sx = Math.floor((srcW - crop) / 2);
+        const sy = Math.floor((srcH - crop) / 2);
+        octx.drawImage(img, sx, sy, crop, crop, 0, 0, sampleSize, sampleSize);
+        const data = octx.getImageData(0, 0, sampleSize, sampleSize).data;
+
+        let rSum = 0,
+          gSum = 0,
+          bSum = 0,
+          weightSum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const a = data[i + 3] / 255;
+          if (a < 0.6) continue;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          // De-emphasize near-white backgrounds (common in证件照边缘).
+          const max = Math.max(r, g, b);
+          const min = Math.min(r, g, b);
+          const chroma = max - min;
+          const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const w = (0.35 + chroma / 255) * (1 - clamp((luma - 230) / 25, 0, 1));
+          rSum += r * w;
+          gSum += g * w;
+          bSum += b * w;
+          weightSum += w;
+        }
+
+        if (weightSum <= 1e-6) return "#111111";
+        const r = clamp(Math.round(rSum / weightSum), 0, 255);
+        const g = clamp(Math.round(gSum / weightSum), 0, 255);
+        const b = clamp(Math.round(bSum / weightSum), 0, 255);
+
+        // Convert to a dark, readable solid background while keeping hue.
+        const hsl = rgbToHsl(r, g, b);
+        const hue = hsl.h;
+        const sat = clamp(hsl.s, 0.16, 0.58);
+        const light = clamp(0.18 - (hsl.l - 0.5) * 0.06, 0.12, 0.24);
+        const rgb = hslToRgb(hue, sat, light);
+        return rgbToHex(rgb.r, rgb.g, rgb.b);
       }
 
       function getBottomLumaEstimate(yStart) {
@@ -525,6 +624,10 @@
         state.image = img;
         state.offsetX = 0;
         state.offsetY = 0;
+        // Default solid background: pick a color that matches the uploaded image tone.
+        try {
+          els.bgColor.value = pickSolidBgFromImage(img);
+        } catch {}
       }
 
       function applyPreset() {
@@ -556,13 +659,13 @@
         els.preset.value = "900x383";
         els.format.value = "image/png";
         els.bgColor.value = "#111111";
-        state.style = "auto";
+        state.style = "solid";
         state.readability = "normal";
         state.pos = "center";
         state.offsetX = 0;
         state.offsetY = 0;
 
-        setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleAuto);
+        setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleSolid);
         setPressed([els.readNormal, els.readStrong, els.readMax], els.readNormal);
         setPressed([els.posLeft, els.posCenter, els.posRight], els.posCenter);
 
@@ -679,6 +782,11 @@
         els.styleSolid.addEventListener("click", () => {
           state.style = "solid";
           setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleSolid);
+          if (state.image) {
+            try {
+              els.bgColor.value = pickSolidBgFromImage(state.image);
+            } catch {}
+          }
           syncAndRender({ applyAutoReadability: false });
         });
         els.styleClear.addEventListener("click", () => {
