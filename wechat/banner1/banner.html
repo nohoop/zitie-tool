@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>公众号封面头图生成器</title>
+    <title>公众号封面图（竖图转横图）</title>
     <meta name="color-scheme" content="light dark" />
     <style>
       :root {
@@ -12,9 +12,8 @@
         --text: #1d1d1f;
         --muted: #6e6e73;
         --border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 14px 40px rgba(0, 0, 0, 0.1);
         --accent: #007aff;
-        --danger: #ff3b30;
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       }
 
       @media (prefers-color-scheme: dark) {
@@ -24,7 +23,7 @@
           --text: #f5f5f7;
           --muted: #a1a1a6;
           --border: rgba(255, 255, 255, 0.12);
-          --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+          --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
         }
       }
 
@@ -42,12 +41,8 @@
         color: var(--text);
       }
 
-      a {
-        color: inherit;
-      }
-
       .app {
-        max-width: 1100px;
+        max-width: 1060px;
         margin: 0 auto;
         padding: 18px 16px 28px;
       }
@@ -56,82 +51,71 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        gap: 14px;
+        gap: 12px;
         margin-bottom: 14px;
-      }
-      .title {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
       }
       h1 {
         margin: 0;
-        font-size: 20px;
+        font-size: 18px;
         letter-spacing: -0.2px;
       }
-      .subtitle {
-        margin: 0;
+      .sub {
+        margin: 6px 0 0;
         color: var(--muted);
         font-size: 12px;
         line-height: 1.4;
       }
-      .top-actions {
+
+      .actions {
         display: flex;
         gap: 10px;
         align-items: center;
-      }
-
-      .layout {
-        display: grid;
-        grid-template-columns: 360px 1fr;
-        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .card {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 16px;
+        border-radius: 18px;
         box-shadow: var(--shadow);
         overflow: hidden;
       }
 
-      .panel {
-        padding: 14px;
-      }
-      .panel h2 {
-        margin: 0 0 10px;
-        font-size: 14px;
-      }
-      .hint {
-        color: var(--muted);
-        font-size: 12px;
-        line-height: 1.5;
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid var(--border);
+        background: rgba(118, 118, 128, 0.05);
       }
 
       .grid {
         display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: 10px;
-        margin-top: 10px;
       }
 
-      .row {
+      .field {
+        grid-column: span 12;
         display: grid;
-        grid-template-columns: 116px 1fr;
-        gap: 10px;
-        align-items: center;
+        gap: 6px;
       }
+
       label {
         font-size: 12px;
         color: var(--muted);
       }
-      input[type="range"] {
+
+      input[type="file"] {
         width: 100%;
       }
-      input[type="text"],
-      input[type="number"],
-      select {
+
+      select,
+      input[type="color"] {
         width: 100%;
-        padding: 10px 10px;
+        padding: 10px 12px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: transparent;
@@ -139,12 +123,8 @@
         outline: none;
       }
       input[type="color"] {
-        width: 100%;
-        height: 40px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: transparent;
-        padding: 4px;
+        padding: 6px;
+        height: 42px;
       }
 
       .btn {
@@ -162,10 +142,6 @@
         border-color: rgba(0, 122, 255, 0.35);
         background: rgba(0, 122, 255, 0.14);
       }
-      .btn.danger {
-        border-color: rgba(255, 59, 48, 0.4);
-        background: rgba(255, 59, 48, 0.12);
-      }
       .btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -173,30 +149,54 @@
 
       .seg {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .seg button {
+        border: 0;
+        padding: 10px 10px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 650;
+        font-size: 12px;
+      }
+      .seg button[aria-pressed="true"] {
+        background: rgba(0, 122, 255, 0.14);
+        color: var(--text);
+      }
+
+      .preview {
+        padding: 14px;
+        display: grid;
         gap: 10px;
       }
 
-      .toggle {
+      .meta {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         gap: 10px;
-        padding: 10px 12px;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        background: rgba(118, 118, 128, 0.08);
+        flex-wrap: wrap;
       }
-      .toggle span {
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(118, 118, 128, 0.08);
         font-size: 12px;
         color: var(--muted);
       }
-
-      .preview-wrap {
-        padding: 14px;
-        display: grid;
-        gap: 12px;
+      .pill strong {
+        color: var(--text);
+        font-weight: 750;
       }
+
       .canvas-wrap {
         border-radius: 18px;
         overflow: hidden;
@@ -210,53 +210,27 @@
         touch-action: none;
       }
 
-      .preview-meta {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .pill {
-        display: inline-flex;
-        gap: 6px;
-        align-items: center;
-        padding: 7px 10px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: rgba(118, 118, 128, 0.08);
+      .status {
+        color: var(--muted);
         font-size: 12px;
-        color: var(--muted);
-      }
-      .pill strong {
-        color: var(--text);
-        font-weight: 700;
+        line-height: 1.45;
       }
 
-      .kbd {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        font-size: 11px;
-        padding: 2px 6px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: rgba(118, 118, 128, 0.08);
-        color: var(--muted);
+      @media (min-width: 900px) {
+        .toolbar .grid {
+          gap: 12px;
+        }
+        .field.sm-6 {
+          grid-column: span 6;
+        }
+        .field.sm-4 {
+          grid-column: span 4;
+        }
       }
 
-      .sr {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        border: 0;
-      }
-
-      @media (max-width: 980px) {
-        .layout {
-          grid-template-columns: 1fr;
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto !important;
         }
       }
     </style>
@@ -264,189 +238,123 @@
   <body>
     <div class="app">
       <header>
-        <div class="title">
-          <h1>公众号封面头图生成器</h1>
-          <p class="subtitle">
-            上传竖图（登记照等），自动生成横向封面；支持模糊背景扩展 + 底部压暗，避免标题文字看不清。
-          </p>
+        <div>
+          <h1>公众号封面图（竖图转横图）</h1>
+          <p class="sub">上传人物竖图 → 自动补齐左右背景，并在底部压暗，方便叠加标题文字。</p>
         </div>
-        <div class="top-actions">
+        <div class="actions">
+          <select id="format" aria-label="下载格式">
+            <option value="image/png" selected>PNG</option>
+            <option value="image/jpeg">JPG</option>
+          </select>
           <button class="btn" id="btnReset" type="button">重置</button>
-          <button class="btn primary" id="btnDownload" type="button" disabled>下载图片</button>
+          <button class="btn primary" id="btnDownload" type="button" disabled>下载</button>
         </div>
       </header>
 
-      <div class="layout">
-        <section class="card">
-          <div class="panel">
-            <h2>参数</h2>
-            <div class="hint">
-              拖动画布中的人物可调整位置；按住 <span class="kbd">Shift</span> 拖动可微调。建议先选好尺寸，再调整。
+      <section class="card">
+        <div class="preview">
+          <div class="meta">
+            <div class="pill">尺寸：<strong id="sizeText">900×383</strong></div>
+            <div class="pill">拖动人物调整位置（按住 Shift 微调）</div>
+          </div>
+          <div class="canvas-wrap" id="dropZone" aria-label="drop zone">
+            <canvas id="c" width="900" height="383" aria-label="preview canvas"></canvas>
+          </div>
+          <div class="status" id="status">请上传一张竖图（也支持拖拽到画布）。</div>
+        </div>
+
+        <div class="toolbar">
+          <div class="grid">
+            <div class="field sm-6">
+              <label for="file">上传图片</label>
+              <input id="file" type="file" accept="image/*" />
             </div>
 
-            <div class="grid" aria-label="controls">
-              <div class="row">
-                <label for="file">上传人物竖图</label>
-                <input id="file" type="file" accept="image/*" />
-              </div>
+            <div class="field sm-6">
+              <label for="preset">封面尺寸</label>
+              <select id="preset">
+                <option value="900x383" selected>微信公众号：900×383（推荐）</option>
+                <option value="1000x420">2.38:1：1000×420</option>
+                <option value="1280x720">16:9：1280×720</option>
+              </select>
+            </div>
 
-              <div class="row">
-                <label for="preset">封面尺寸</label>
-                <select id="preset">
-                  <option value="900x383" selected>微信公众号封面：900×383（推荐）</option>
-                  <option value="900x500">通用横图：900×500</option>
-                  <option value="1280x720">16:9：1280×720</option>
-                  <option value="custom">自定义…</option>
-                </select>
+            <div class="field sm-6">
+              <label>风格</label>
+              <div class="seg" role="group" aria-label="style">
+                <button type="button" id="styleAuto" aria-pressed="true">自动</button>
+                <button type="button" id="styleSolid" aria-pressed="false">纯色</button>
+                <button type="button" id="styleClear" aria-pressed="false">清爽</button>
               </div>
+            </div>
 
-              <div class="seg" id="customSize" style="display: none">
-                <div>
-                  <label for="outW">宽</label>
-                  <input id="outW" type="number" min="200" max="4000" step="1" value="900" />
-                </div>
-                <div>
-                  <label for="outH">高</label>
-                  <input id="outH" type="number" min="200" max="4000" step="1" value="383" />
-                </div>
+            <div class="field sm-6">
+              <label>文字可读性（底部压暗）</label>
+              <div class="seg" role="group" aria-label="readability">
+                <button type="button" id="readNormal" aria-pressed="true">自然</button>
+                <button type="button" id="readStrong" aria-pressed="false">加强</button>
+                <button type="button" id="readMax" aria-pressed="false">很强</button>
               </div>
+            </div>
 
-              <div class="row">
-                <label for="bgMode">背景模式</label>
-                <select id="bgMode">
-                  <option value="blur" selected>同图扩展（模糊）</option>
-                  <option value="solid">纯色填充</option>
-                </select>
+            <div class="field sm-6">
+              <label>人物位置</label>
+              <div class="seg" role="group" aria-label="subject position">
+                <button type="button" id="posLeft" aria-pressed="false">偏左</button>
+                <button type="button" id="posCenter" aria-pressed="true">居中</button>
+                <button type="button" id="posRight" aria-pressed="false">偏右</button>
               </div>
+            </div>
 
-              <div class="row" id="bgColorRow" style="display: none">
-                <label for="bgColor">背景颜色</label>
-                <input id="bgColor" type="color" value="#111111" />
-              </div>
-
-              <div class="row">
-                <label for="subjectScale">人物大小</label>
-                <input id="subjectScale" type="range" min="0.6" max="1.5" step="0.01" value="1.0" />
-              </div>
-
-              <div class="row">
-                <label for="subjectHeight">人物高度占比</label>
-                <input id="subjectHeight" type="range" min="0.65" max="1.05" step="0.01" value="0.92" />
-              </div>
-
-              <div class="row">
-                <label for="blur">背景模糊</label>
-                <input id="blur" type="range" min="0" max="24" step="1" value="16" />
-              </div>
-
-              <div class="row">
-                <label for="bgDim">背景压暗</label>
-                <input id="bgDim" type="range" min="0" max="0.6" step="0.01" value="0.18" />
-              </div>
-
-              <div class="toggle">
-                <span>自动加强底部压暗（防止标题看不清）</span>
-                <input id="autoBottom" type="checkbox" checked />
-              </div>
-
-              <div class="row">
-                <label for="bottomStrength">底部压暗强度</label>
-                <input id="bottomStrength" type="range" min="0" max="0.85" step="0.01" value="0.55" />
-              </div>
-
-              <div class="row">
-                <label for="bottomStart">压暗起点（高度）</label>
-                <input id="bottomStart" type="range" min="0.25" max="0.85" step="0.01" value="0.55" />
-              </div>
-
-              <div class="row">
-                <label for="title">预览标题</label>
-                <input id="title" type="text" value="这里是文章标题，看看清不清楚" />
-              </div>
-
-              <div class="row">
-                <label for="titleSize">标题字号</label>
-                <input id="titleSize" type="range" min="26" max="72" step="1" value="44" />
-              </div>
-
-              <div class="row">
-                <label for="titleY">标题位置（Y）</label>
-                <input id="titleY" type="range" min="0.55" max="0.95" step="0.01" value="0.82" />
-              </div>
-
-              <div class="row">
-                <label for="format">下载格式</label>
-                <select id="format">
-                  <option value="image/png" selected>PNG（清晰）</option>
-                  <option value="image/jpeg">JPG（体积更小）</option>
-                </select>
-              </div>
-              <div class="row" id="qualityRow" style="display: none">
-                <label for="quality">JPG 质量</label>
-                <input id="quality" type="range" min="0.6" max="0.95" step="0.01" value="0.88" />
-              </div>
+            <div class="field sm-6" id="bgColorField" style="display: none">
+              <label for="bgColor">背景色</label>
+              <input id="bgColor" type="color" value="#111111" />
             </div>
           </div>
-        </section>
-
-        <section class="card">
-          <div class="preview-wrap">
-            <div class="preview-meta">
-              <div class="pill">
-                输出尺寸：<strong id="sizeText">900×383</strong>
-              </div>
-              <div class="pill">
-                拖动人物调整位置（<span class="kbd">Shift</span> 微调）
-              </div>
-            </div>
-            <div class="canvas-wrap">
-              <canvas id="c" width="900" height="383" aria-label="preview canvas"></canvas>
-            </div>
-            <div class="hint" id="status">请先上传一张竖图。</div>
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
 
     <script>
       const els = {
         file: document.getElementById("file"),
         preset: document.getElementById("preset"),
-        customSize: document.getElementById("customSize"),
-        outW: document.getElementById("outW"),
-        outH: document.getElementById("outH"),
-        bgMode: document.getElementById("bgMode"),
-        bgColorRow: document.getElementById("bgColorRow"),
-        bgColor: document.getElementById("bgColor"),
-        subjectScale: document.getElementById("subjectScale"),
-        subjectHeight: document.getElementById("subjectHeight"),
-        blur: document.getElementById("blur"),
-        bgDim: document.getElementById("bgDim"),
-        autoBottom: document.getElementById("autoBottom"),
-        bottomStrength: document.getElementById("bottomStrength"),
-        bottomStart: document.getElementById("bottomStart"),
-        title: document.getElementById("title"),
-        titleSize: document.getElementById("titleSize"),
-        titleY: document.getElementById("titleY"),
         format: document.getElementById("format"),
-        qualityRow: document.getElementById("qualityRow"),
-        quality: document.getElementById("quality"),
         btnReset: document.getElementById("btnReset"),
         btnDownload: document.getElementById("btnDownload"),
         sizeText: document.getElementById("sizeText"),
         status: document.getElementById("status"),
         canvas: document.getElementById("c"),
+        dropZone: document.getElementById("dropZone"),
+        bgColorField: document.getElementById("bgColorField"),
+        bgColor: document.getElementById("bgColor"),
+        // style
+        styleAuto: document.getElementById("styleAuto"),
+        styleSolid: document.getElementById("styleSolid"),
+        styleClear: document.getElementById("styleClear"),
+        // readability
+        readNormal: document.getElementById("readNormal"),
+        readStrong: document.getElementById("readStrong"),
+        readMax: document.getElementById("readMax"),
+        // position
+        posLeft: document.getElementById("posLeft"),
+        posCenter: document.getElementById("posCenter"),
+        posRight: document.getElementById("posRight"),
       };
 
       const ctx = els.canvas.getContext("2d", { alpha: false, willReadFrequently: true });
+
       const state = {
         image: null,
         objectUrl: null,
         outW: 900,
         outH: 383,
-        // subject placement in output-space pixels
-        subjectX: 0,
-        subjectY: 0,
+        style: "auto", // auto | solid | clear
+        readability: "normal", // normal | strong | max
+        pos: "center", // left | center | right
+        offsetX: 0,
+        offsetY: 0,
         subjectRect: null,
         dragging: false,
         dragOffsetX: 0,
@@ -457,26 +365,16 @@
         return Math.min(max, Math.max(min, value));
       }
 
+      function setPressed(groupEls, activeEl) {
+        for (const el of groupEls) el.setAttribute("aria-pressed", el === activeEl ? "true" : "false");
+      }
+
       function setCanvasSize(width, height) {
         state.outW = width;
         state.outH = height;
         els.canvas.width = width;
         els.canvas.height = height;
         els.sizeText.textContent = `${width}×${height}`;
-      }
-
-      function parsePreset() {
-        if (els.preset.value === "custom") {
-          els.customSize.style.display = "grid";
-          const w = clamp(Number(els.outW.value || 900), 200, 4000);
-          const h = clamp(Number(els.outH.value || 383), 200, 4000);
-          els.outW.value = String(w);
-          els.outH.value = String(h);
-          return { w, h };
-        }
-        els.customSize.style.display = "none";
-        const [w, h] = els.preset.value.split("x").map((v) => Number(v));
-        return { w, h };
       }
 
       function coverRect(imgW, imgH, dstW, dstH) {
@@ -503,91 +401,46 @@
         const y = clamp(Math.floor(yStart), 0, h - 1);
         const hh = clamp(h - y, 1, h);
         const imageData = ctx.getImageData(0, y, w, hh).data;
-
-        // Sample stride to keep it fast.
-        const stride = Math.max(4, Math.floor((w * hh) / 40000)) * 4;
+        const stride = Math.max(4, Math.floor((w * hh) / 42000)) * 4;
         let sum = 0;
         let count = 0;
         for (let i = 0; i < imageData.length; i += stride) {
           const r = imageData[i] / 255;
           const g = imageData[i + 1] / 255;
           const b = imageData[i + 2] / 255;
-          // Relative luminance (sRGB-ish, no gamma correction for speed).
-          const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          sum += luma;
+          sum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
           count += 1;
         }
         return count ? sum / count : 0.5;
       }
 
-      function drawTitleOverlay() {
-        const text = String(els.title.value || "").trim();
-        if (!text) return;
-
+      function baseSubjectCenter() {
         const w = els.canvas.width;
         const h = els.canvas.height;
-        const fontSize = Number(els.titleSize.value);
-        const y = clamp(Number(els.titleY.value), 0, 1) * h;
-        const padding = Math.max(18, Math.round(w * 0.05));
-
-        ctx.save();
-        ctx.textBaseline = "alphabetic";
-        ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Noto Sans SC", sans-serif`;
-
-        // Wrap to two lines max for preview.
-        const maxWidth = w - padding * 2;
-        const words = text.split("");
-        const lines = [];
-        let current = "";
-        for (const ch of words) {
-          const test = current + ch;
-          if (ctx.measureText(test).width <= maxWidth) {
-            current = test;
-          } else {
-            lines.push(current);
-            current = ch;
-            if (lines.length >= 2) break;
-          }
-        }
-        if (lines.length < 2 && current) lines.push(current);
-
-        const lineHeight = Math.round(fontSize * 1.18);
-        const totalH = lineHeight * lines.length;
-        const baseY = Math.round(y - (lines.length - 1) * lineHeight);
-
-        // Soft shadow for readability.
-        ctx.fillStyle = "rgba(0,0,0,0.42)";
-        ctx.shadowColor = "rgba(0,0,0,0.55)";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 3;
-        for (let i = 0; i < lines.length; i++) {
-          ctx.fillText(lines[i], padding, baseY + i * lineHeight);
-        }
-
-        ctx.shadowColor = "transparent";
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.fillStyle = "rgba(255,255,255,0.98)";
-        for (let i = 0; i < lines.length; i++) {
-          ctx.fillText(lines[i], padding, baseY + i * lineHeight);
-        }
-        ctx.restore();
+        const x = state.pos === "left" ? w * 0.37 : state.pos === "right" ? w * 0.63 : w * 0.5;
+        const y = h * 0.52;
+        return { x, y };
       }
 
-      function render({ applyAutoBottom = true } = {}) {
+      function getReadabilityBase() {
+        // Tuned for "文字叠在底部" 的常见封面视觉。
+        if (state.readability === "max") return { baseStrength: 0.76, start: 0.5 };
+        if (state.readability === "strong") return { baseStrength: 0.62, start: 0.53 };
+        return { baseStrength: 0.48, start: 0.56 };
+      }
+
+      function render({ applyAutoReadability = true } = {}) {
         const img = state.image;
         const w = els.canvas.width;
         const h = els.canvas.height;
-
         ctx.save();
         ctx.clearRect(0, 0, w, h);
 
-        // Background.
         if (!img) {
           ctx.fillStyle = "rgba(118,118,128,0.10)";
           ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = "rgba(110,110,115,0.8)";
-          ctx.font = `600 ${Math.round(Math.min(w, h) * 0.06)}px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif`;
+          ctx.fillStyle = "rgba(110,110,115,0.9)";
+          ctx.font = `650 ${Math.round(Math.min(w, h) * 0.06)}px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("上传图片开始", w / 2, h / 2);
@@ -595,80 +448,70 @@
           return;
         }
 
-        const bgMode = els.bgMode.value;
-        if (bgMode === "solid") {
+        // Background (Apple-ish: soft, clean).
+        if (state.style === "solid") {
           ctx.fillStyle = els.bgColor.value || "#111111";
           ctx.fillRect(0, 0, w, h);
         } else {
-          const blurPx = Number(els.blur.value);
           const r = coverRect(img.naturalWidth, img.naturalHeight, w, h);
+          const blurPx = state.style === "clear" ? 10 : 18;
+          const zoom = state.style === "clear" ? 1.035 : 1.06;
           ctx.save();
           ctx.filter = blurPx > 0 ? `blur(${blurPx}px)` : "none";
-          // Slight zoom to hide blur edges.
-          const zoom = 1.06;
           ctx.translate(w / 2, h / 2);
           ctx.scale(zoom, zoom);
           ctx.translate(-w / 2, -h / 2);
           ctx.drawImage(img, r.x, r.y, r.w, r.h);
           ctx.restore();
-        }
 
-        // Overall dim.
-        const dim = Number(els.bgDim.value);
-        if (dim > 0) {
-          ctx.fillStyle = `rgba(0,0,0,${clamp(dim, 0, 0.75)})`;
+          // Overall dim: keep "clear" lighter.
+          const dim = state.style === "clear" ? 0.06 : 0.14;
+          ctx.fillStyle = `rgba(0,0,0,${dim})`;
           ctx.fillRect(0, 0, w, h);
         }
 
-        // Subject (portrait).
-        const heightRatio = clamp(Number(els.subjectHeight.value), 0.5, 1.2);
-        const subjectScale = clamp(Number(els.subjectScale.value), 0.4, 2.0);
-        const targetH = h * heightRatio * subjectScale;
+        // Subject (portrait) — auto sizing, minimal knobs.
+        const targetH = h * 0.94;
         const subject = containRect(img.naturalWidth, img.naturalHeight, w, targetH);
-
-        // Initialize subject position if first render for this size.
-        if (state.subjectX === 0 && state.subjectY === 0) {
-          state.subjectX = Math.round(w * 0.62);
-          state.subjectY = Math.round(h * 0.52);
-        }
-
-        const sx = Math.round(state.subjectX - subject.w / 2);
-        const sy = Math.round(state.subjectY - subject.h / 2);
-        state.subjectRect = { x: sx, y: sy, w: subject.w, h: subject.h };
+        const base = baseSubjectCenter();
+        const centerX = base.x + state.offsetX;
+        const centerY = base.y + state.offsetY;
+        const sx = Math.round(centerX - subject.w / 2);
+        const sy = Math.round(centerY - subject.h / 2);
+        state.subjectRect = { x: sx, y: sy, w: subject.w, h: subject.h, cx: centerX, cy: centerY };
 
         ctx.save();
-        // Subtle shadow to separate from background.
-        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowColor = "rgba(0,0,0,0.33)";
         ctx.shadowBlur = 18;
-        ctx.shadowOffsetY = 6;
+        ctx.shadowOffsetY = 7;
         ctx.drawImage(img, sx, sy, subject.w, subject.h);
         ctx.restore();
 
-        // Bottom readability gradient.
-        const start = clamp(Number(els.bottomStart.value), 0, 1) * h;
-        let strength = clamp(Number(els.bottomStrength.value), 0, 0.95);
-        if (els.autoBottom.checked && applyAutoBottom) {
-          // First pass luma check.
-          const luma = getBottomLumaEstimate(start);
-          // If bottom is bright, increase gradient.
+        // Bottom readability gradient (auto-adjust based on bottom brightness).
+        const { baseStrength, start } = getReadabilityBase();
+        let strength = baseStrength;
+        const startPx = start * h;
+        if (applyAutoReadability) {
+          const luma = getBottomLumaEstimate(startPx);
           const target = 0.34;
-          const extra = clamp((luma - target) / 0.9, 0, 1) * 0.35;
-          strength = clamp(strength + extra, 0, 0.95);
+          const extra = clamp((luma - target) / 0.85, 0, 1) * 0.26;
+          strength = clamp(strength + extra, 0, 0.92);
         }
-        if (strength > 0) {
-          const g = ctx.createLinearGradient(0, start, 0, h);
-          g.addColorStop(0, "rgba(0,0,0,0)");
-          g.addColorStop(1, `rgba(0,0,0,${strength})`);
-          ctx.fillStyle = g;
-          ctx.fillRect(0, start, w, h - start);
-        }
+        const g = ctx.createLinearGradient(0, startPx, 0, h);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(1, `rgba(0,0,0,${strength})`);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, startPx, w, h - startPx);
 
-        drawTitleOverlay();
         ctx.restore();
       }
 
-      function updateDownloadAvailability() {
+      function updateUI() {
         els.btnDownload.disabled = !state.image;
+        els.bgColorField.style.display = state.style === "solid" ? "grid" : "none";
+        els.status.textContent = state.image
+          ? "拖动人物调整位置，满意后点击下载。"
+          : "请上传一张竖图（也支持拖拽到画布）。";
       }
 
       async function loadImageFromFile(file) {
@@ -680,33 +523,27 @@
         img.src = state.objectUrl;
         await img.decode();
         state.image = img;
-        state.subjectX = 0;
-        state.subjectY = 0;
+        state.offsetX = 0;
+        state.offsetY = 0;
       }
 
-      function syncFromControlsAndRender() {
-        const { w, h } = parsePreset();
+      function applyPreset() {
+        const [w, h] = els.preset.value.split("x").map((v) => Number(v));
         setCanvasSize(w, h);
+      }
 
-        const bgMode = els.bgMode.value;
-        els.bgColorRow.style.display = bgMode === "solid" ? "grid" : "none";
-
-        const format = els.format.value;
-        els.qualityRow.style.display = format === "image/jpeg" ? "grid" : "none";
-
-        render();
-        updateDownloadAvailability();
-        els.status.textContent = state.image
-          ? "已生成预览。拖动人物调整位置，满意后下载。"
-          : "请先上传一张竖图。";
+      function syncAndRender({ applyAutoReadability = true } = {}) {
+        applyPreset();
+        render({ applyAutoReadability });
+        updateUI();
       }
 
       function download() {
         if (!state.image) return;
         const format = els.format.value;
-        const quality = clamp(Number(els.quality.value), 0.1, 0.99);
-        const name = `wechat-cover-${state.outW}x${state.outH}.${format === "image/jpeg" ? "jpg" : "png"}`;
-        const url = els.canvas.toDataURL(format, format === "image/jpeg" ? quality : undefined);
+        const ext = format === "image/jpeg" ? "jpg" : "png";
+        const name = `wechat-cover-${state.outW}x${state.outH}.${ext}`;
+        const url = els.canvas.toDataURL(format, format === "image/jpeg" ? 0.92 : undefined);
         const a = document.createElement("a");
         a.href = url;
         a.download = name;
@@ -717,42 +554,30 @@
 
       function reset() {
         els.preset.value = "900x383";
-        els.outW.value = "900";
-        els.outH.value = "383";
-        els.bgMode.value = "blur";
-        els.bgColor.value = "#111111";
-        els.subjectScale.value = "1.0";
-        els.subjectHeight.value = "0.92";
-        els.blur.value = "16";
-        els.bgDim.value = "0.18";
-        els.autoBottom.checked = true;
-        els.bottomStrength.value = "0.55";
-        els.bottomStart.value = "0.55";
-        els.title.value = "这里是文章标题，看看清不清楚";
-        els.titleSize.value = "44";
-        els.titleY.value = "0.82";
         els.format.value = "image/png";
-        els.quality.value = "0.88";
+        els.bgColor.value = "#111111";
+        state.style = "auto";
+        state.readability = "normal";
+        state.pos = "center";
+        state.offsetX = 0;
+        state.offsetY = 0;
+
+        setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleAuto);
+        setPressed([els.readNormal, els.readStrong, els.readMax], els.readNormal);
+        setPressed([els.posLeft, els.posCenter, els.posRight], els.posCenter);
 
         if (state.objectUrl) URL.revokeObjectURL(state.objectUrl);
         state.objectUrl = null;
         state.image = null;
-        state.subjectX = 0;
-        state.subjectY = 0;
-
         els.file.value = "";
-        syncFromControlsAndRender();
+        syncAndRender();
       }
 
-      // Canvas dragging (portrait positioning).
       function eventToCanvasPoint(e) {
         const rect = els.canvas.getBoundingClientRect();
         const scaleX = els.canvas.width / rect.width;
         const scaleY = els.canvas.height / rect.height;
-        return {
-          x: (e.clientX - rect.left) * scaleX,
-          y: (e.clientY - rect.top) * scaleY,
-        };
+        return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
       }
 
       function hitTestSubject(pt) {
@@ -768,24 +593,25 @@
         e.preventDefault();
         els.canvas.setPointerCapture(e.pointerId);
         state.dragging = true;
-        state.dragOffsetX = pt.x - state.subjectX;
-        state.dragOffsetY = pt.y - state.subjectY;
+        const base = baseSubjectCenter();
+        const centerX = base.x + state.offsetX;
+        const centerY = base.y + state.offsetY;
+        state.dragOffsetX = pt.x - centerX;
+        state.dragOffsetY = pt.y - centerY;
       }
 
       function onPointerMove(e) {
         if (!state.dragging) return;
         const pt = eventToCanvasPoint(e);
         const fine = e.shiftKey ? 0.35 : 1;
-        const nextX = pt.x - state.dragOffsetX;
-        const nextY = pt.y - state.dragOffsetY;
-
-        // Keep subject roughly within bounds.
-        const r = state.subjectRect || { w: 0, h: 0 };
-        const w = els.canvas.width;
-        const h = els.canvas.height;
-        state.subjectX = clamp(nextX, -r.w * 0.1 + w * 0.0, w + r.w * 0.1) * fine + state.subjectX * (1 - fine);
-        state.subjectY = clamp(nextY, -r.h * 0.1 + h * 0.0, h + r.h * 0.1) * fine + state.subjectY * (1 - fine);
-        render({ applyAutoBottom: false });
+        const base = baseSubjectCenter();
+        const nextCenterX = pt.x - state.dragOffsetX;
+        const nextCenterY = pt.y - state.dragOffsetY;
+        const nextOffsetX = nextCenterX - base.x;
+        const nextOffsetY = nextCenterY - base.y;
+        state.offsetX = state.offsetX * (1 - fine) + nextOffsetX * fine;
+        state.offsetY = state.offsetY * (1 - fine) + nextOffsetY * fine;
+        render({ applyAutoReadability: false });
       }
 
       function onPointerUp(e) {
@@ -794,7 +620,7 @@
         try {
           els.canvas.releasePointerCapture(e.pointerId);
         } catch {}
-        render();
+        render({ applyAutoReadability: true });
       }
 
       // Events.
@@ -803,35 +629,36 @@
         if (!file) return;
         try {
           await loadImageFromFile(file);
-          syncFromControlsAndRender();
+          syncAndRender();
         } catch (err) {
           console.error(err);
           els.status.textContent = "图片加载失败，请换一张试试。";
         }
       });
 
-      for (const el of [
-        els.preset,
-        els.outW,
-        els.outH,
-        els.bgMode,
-        els.bgColor,
-        els.subjectScale,
-        els.subjectHeight,
-        els.blur,
-        els.bgDim,
-        els.autoBottom,
-        els.bottomStrength,
-        els.bottomStart,
-        els.title,
-        els.titleSize,
-        els.titleY,
-        els.format,
-        els.quality,
-      ]) {
-        el.addEventListener("input", syncFromControlsAndRender);
-        el.addEventListener("change", syncFromControlsAndRender);
-      }
+      els.dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+      els.dropZone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        try {
+          await loadImageFromFile(file);
+          syncAndRender();
+        } catch (err) {
+          console.error(err);
+          els.status.textContent = "图片加载失败，请换一张试试。";
+        }
+      });
+
+      els.preset.addEventListener("change", () => {
+        state.offsetX = 0;
+        state.offsetY = 0;
+        syncAndRender({ applyAutoReadability: true });
+      });
+      els.format.addEventListener("change", () => updateUI());
+      els.bgColor.addEventListener("input", () => syncAndRender({ applyAutoReadability: false }));
 
       els.btnDownload.addEventListener("click", download);
       els.btnReset.addEventListener("click", reset);
@@ -840,9 +667,68 @@
       els.canvas.addEventListener("pointermove", onPointerMove);
       els.canvas.addEventListener("pointerup", onPointerUp);
       els.canvas.addEventListener("pointercancel", onPointerUp);
-      window.addEventListener("resize", () => render({ applyAutoBottom: false }));
+      window.addEventListener("resize", () => render({ applyAutoReadability: false }));
 
-      // Init.
+      function hookSeg() {
+        // Style
+        els.styleAuto.addEventListener("click", () => {
+          state.style = "auto";
+          setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleAuto);
+          syncAndRender();
+        });
+        els.styleSolid.addEventListener("click", () => {
+          state.style = "solid";
+          setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleSolid);
+          syncAndRender({ applyAutoReadability: false });
+        });
+        els.styleClear.addEventListener("click", () => {
+          state.style = "clear";
+          setPressed([els.styleAuto, els.styleSolid, els.styleClear], els.styleClear);
+          syncAndRender();
+        });
+
+        // Readability
+        els.readNormal.addEventListener("click", () => {
+          state.readability = "normal";
+          setPressed([els.readNormal, els.readStrong, els.readMax], els.readNormal);
+          syncAndRender();
+        });
+        els.readStrong.addEventListener("click", () => {
+          state.readability = "strong";
+          setPressed([els.readNormal, els.readStrong, els.readMax], els.readStrong);
+          syncAndRender();
+        });
+        els.readMax.addEventListener("click", () => {
+          state.readability = "max";
+          setPressed([els.readNormal, els.readStrong, els.readMax], els.readMax);
+          syncAndRender();
+        });
+
+        // Position
+        els.posLeft.addEventListener("click", () => {
+          state.pos = "left";
+          state.offsetX = 0;
+          state.offsetY = 0;
+          setPressed([els.posLeft, els.posCenter, els.posRight], els.posLeft);
+          syncAndRender({ applyAutoReadability: false });
+        });
+        els.posCenter.addEventListener("click", () => {
+          state.pos = "center";
+          state.offsetX = 0;
+          state.offsetY = 0;
+          setPressed([els.posLeft, els.posCenter, els.posRight], els.posCenter);
+          syncAndRender({ applyAutoReadability: false });
+        });
+        els.posRight.addEventListener("click", () => {
+          state.pos = "right";
+          state.offsetX = 0;
+          state.offsetY = 0;
+          setPressed([els.posLeft, els.posCenter, els.posRight], els.posRight);
+          syncAndRender({ applyAutoReadability: false });
+        });
+      }
+
+      hookSeg();
       reset();
     </script>
   </body>
