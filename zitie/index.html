@@ -19,9 +19,9 @@
             --grid-main: #2c8a4c;
             --grid-sub: #a1dcb6;
             --char-color: #333;
-            --grid-size: 13mm;
-            --pinyin-height: 4.5mm;
-            --block-gap: 4mm;
+            --grid-size: 14mm;
+            --pinyin-height: 3.5mm;
+            --block-gap: 3mm;
             --header-height: 14mm;
             --header-gap: 3mm;
         }
@@ -296,7 +296,7 @@
                         <option value="mi">米字格</option>
                     </select>
                     <select id="density" data-default="12" onchange="render()" style="flex:1">
-                        <option value="8" selected>8条/页</option>
+                        <option value="12" selected>12条/页</option>
                     </select>
                 </div>
                 <div class="density-hint" id="densityHint"></div>
@@ -494,6 +494,10 @@
         const defaultDensity = densitySelect ? parseInt(densitySelect.dataset.default || '12', 10) : 12;
         let maxRowsPerPage = 0;
         const SHEET_HEIGHT_MM = 297;
+        const SHEET_WIDTH_MM = 210;
+        const PADDING_LEFT_MM = 12;
+        const PADDING_RIGHT_MM = 12;
+        const GRID_LINE_ALLOWANCE_MM = 3; // 预留边框线占用，避免溢出导致浏览器自动缩放
         const PADDING_TOP_MM = 15;
         const PADDING_BOTTOM_MM = 15;
         const HEADER_HEIGHT_MM = 14;
@@ -518,7 +522,9 @@
             const totalGap = Math.max(0, density - 1) * blockGap;
             const rowHeight = (usableHeight - totalGap) / density;
             const computedGrid = rowHeight - PINYIN_HEIGHT_MM;
-            return { blockGap, computedGrid, gridSize: Math.max(computedGrid, MIN_GRID_MM) };
+            const maxGridByWidth = (SHEET_WIDTH_MM - PADDING_LEFT_MM - PADDING_RIGHT_MM - GRID_LINE_ALLOWANCE_MM) / COLS;
+            const boundedGrid = Math.min(computedGrid, maxGridByWidth);
+            return { blockGap, computedGrid: boundedGrid, gridSize: Math.max(boundedGrid, MIN_GRID_MM) };
         }
 
         function calculateMaxRows() {
