@@ -149,6 +149,22 @@
             min-width: 70px;
         }
 
+        select {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            background: #f5f5f7;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--accent);
+        }
+
         /* 语速滑块 */
         .speed-slider {
             flex: 1;
@@ -265,10 +281,32 @@
             background: #ff9500;
         }
 
+        .status-indicator.loading {
+            background: #007aff;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
         .status-text {
             flex: 1;
             font-size: 14px;
             color: var(--text-secondary);
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
         }
 
         @keyframes pulse {
@@ -333,7 +371,7 @@
             }
         }
 
-        :is(button, a, textarea):focus-visible {
+        :is(button, a, textarea, select):focus-visible {
             outline: 3px solid rgba(255, 149, 0, 0.4);
             outline-offset: 3px;
             border-radius: 12px;
@@ -375,6 +413,17 @@
             <div class="section-label">播放设置</div>
 
             <div class="control-row">
+                <span class="control-label">声音</span>
+                <select id="voiceSelect">
+                    <option value="zh-CN-XiaoxiaoNeural">晓晓 (女声, 温柔)</option>
+                    <option value="zh-CN-YunxiNeural">云希 (男声, 温暖)</option>
+                    <option value="zh-CN-YunyangNeural">云扬 (男声, 成熟)</option>
+                    <option value="zh-CN-XiaoyiNeural">晓伊 (女声, 亲切)</option>
+                    <option value="zh-CN-YunjianNeural">云健 (男声, 稳重)</option>
+                </select>
+            </div>
+
+            <div class="control-row">
                 <span class="control-label">语速</span>
                 <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="2" step="0.1" value="1">
                 <span class="speed-value" id="speedValue">1.0x</span>
@@ -399,7 +448,12 @@
         <!-- 状态栏 -->
         <div class="status-bar">
             <div class="status-indicator" id="statusIndicator"></div>
-            <span class="status-text" id="statusText">准备就绪</span>
+            <div style="flex: 1;">
+                <span class="status-text" id="statusText">准备就绪</span>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -407,18 +461,23 @@
         // 获取元素
         const textInput = document.getElementById('textInput');
         const charCount = document.getElementById('charCount');
+        const voiceSelect = document.getElementById('voiceSelect');
         const speedSlider = document.getElementById('speedSlider');
         const speedValue = document.getElementById('speedValue');
         const playBtn = document.getElementById('playBtn');
         const stopBtn = document.getElementById('stopBtn');
         const statusIndicator = document.getElementById('statusIndicator');
         const statusText = document.getElementById('statusText');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
 
-        // 语音合成
-        let synth = window.speechSynthesis;
-        let utterance = null;
-        let isPaused = false;
+        // 音频相关
+        let audio = null;
         let isPlaying = false;
+        let isLoading = false;
+
+        // Edge TTS API (使用免费的公共 API)
+        const EDGE_TTS_API = 'https://edge-tts.xiexin.tech/api/voice';
 
         // 更新字数统计
         textInput.addEventListener('input', () => {
@@ -428,11 +487,6 @@
         // 语速滑块
         speedSlider.addEventListener('input', () => {
             speedValue.textContent = `${parseFloat(speedSlider.value).toFixed(1)}x`;
-            // 如果正在播放，更新当前语音的语速
-            if (isPlaying && !isPaused) {
-                stopSpeaking();
-                speak();
-            }
         });
 
         // 示例文本
@@ -477,36 +531,22 @@
             if (state) {
                 statusIndicator.classList.add(state);
             }
-        }
 
-        function togglePlay() {
-            if (isPlaying && isPaused) {
-                // 恢复播放
-                synth.resume();
-                isPaused = false;
-                updatePlayButton();
-                updateStatus('正在播放...', 'playing');
-            } else if (isPlaying) {
-                // 暂停播放
-                synth.pause();
-                isPaused = true;
-                updatePlayButton();
-                updateStatus('已暂停', 'paused');
+            // 显示/隐藏进度条
+            if (state === 'playing') {
+                progressBar.style.display = 'block';
+            } else if (state === 'loading') {
+                progressBar.style.display = 'block';
+                progressFill.style.width = '100%';
+                progressFill.style.animation = 'pulse 1s ease-in-out infinite';
             } else {
-                // 开始播放
-                speak();
+                progressBar.style.display = 'none';
+                progressFill.style.animation = 'none';
             }
         }
 
         function updatePlayButton() {
-            if (isPaused) {
-                playBtn.innerHTML = `
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                    继续播放
-                `;
-            } else if (isPlaying) {
+            if (isPlaying) {
                 playBtn.innerHTML = `
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                         <rect x="6" y="4" width="4" height="16"/>
@@ -524,88 +564,122 @@
             }
         }
 
-        function speak() {
+        async function togglePlay() {
+            if (isLoading) return;
+
+            if (isPlaying && audio) {
+                // 暂停/继续
+                if (audio.paused) {
+                    audio.play();
+                    updateStatus('正在播放...', 'playing');
+                } else {
+                    audio.pause();
+                    updateStatus('已暂停', 'paused');
+                }
+                updatePlayButton();
+            } else {
+                // 开始新播放
+                await speak();
+            }
+        }
+
+        async function speak() {
             const text = textInput.value.trim();
             if (!text) {
                 updateStatus('请先输入要播报的内容', '');
                 return;
             }
 
-            // 取消当前播放
-            synth.cancel();
-
-            utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'zh-CN';
-            utterance.rate = parseFloat(speedSlider.value);
-            utterance.pitch = 1;
-            utterance.volume = 1;
-
-            // 尝试获取中文语音
-            const voices = synth.getVoices();
-            const chineseVoice = voices.find(v => v.lang.includes('zh'));
-            if (chineseVoice) {
-                utterance.voice = chineseVoice;
+            // 停止当前播放
+            if (audio) {
+                audio.pause();
+                audio = null;
             }
 
-            utterance.onstart = () => {
-                isPlaying = true;
-                isPaused = false;
-                stopBtn.disabled = false;
-                updatePlayButton();
-                updateStatus('正在播放...', 'playing');
-            };
+            isLoading = true;
+            isPlaying = false;
+            stopBtn.disabled = true;
+            updateStatus('正在生成语音...', 'loading');
+            updatePlayButton();
 
-            utterance.onend = () => {
+            try {
+                const voice = voiceSelect.value;
+                const rate = parseFloat(speedSlider.value);
+
+                // 调用 Edge TTS API
+                const response = await fetch(`${EDGE_TTS_API}?text=${encodeURIComponent(text)}&voice=${voice}&rate=${rate}`);
+
+                if (!response.ok) {
+                    throw new Error('API 请求失败');
+                }
+
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+
+                audio = new Audio(audioUrl);
+
+                audio.onplay = () => {
+                    isLoading = false;
+                    isPlaying = true;
+                    stopBtn.disabled = false;
+                    updateStatus('正在播放...', 'playing');
+                    updatePlayButton();
+                };
+
+                audio.onended = () => {
+                    isLoading = false;
+                    isPlaying = false;
+                    stopBtn.disabled = true;
+                    updateStatus('播放完成', '');
+                    updatePlayButton();
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                audio.onerror = () => {
+                    isLoading = false;
+                    isPlaying = false;
+                    stopBtn.disabled = true;
+                    updateStatus('播放出错，请重试', '');
+                    updatePlayButton();
+                    URL.revokeObjectURL(audioUrl);
+                };
+
+                audio.onpause = () => {
+                    if (isPlaying) {
+                        updateStatus('已暂停', 'paused');
+                    }
+                };
+
+                await audio.play();
+
+            } catch (error) {
+                console.error('Speech error:', error);
+                isLoading = false;
                 isPlaying = false;
-                isPaused = false;
                 stopBtn.disabled = true;
+                updateStatus('生成语音失败，请检查网络', '');
                 updatePlayButton();
-                updateStatus('播放完成', '');
-            };
-
-            utterance.onerror = (event) => {
-                console.error('Speech error:', event.error);
-                isPlaying = false;
-                isPaused = false;
-                stopBtn.disabled = true;
-                updatePlayButton();
-                updateStatus('播放出错，请重试', '');
-            };
-
-            utterance.onpause = () => {
-                updateStatus('已暂停', 'paused');
-            };
-
-            utterance.onresume = () => {
-                updateStatus('正在播放...', 'playing');
-            };
-
-            synth.speak(utterance);
+            }
         }
 
         function stopSpeaking() {
-            synth.cancel();
+            if (audio) {
+                audio.pause();
+                audio = null;
+            }
+            isLoading = false;
             isPlaying = false;
-            isPaused = false;
             stopBtn.disabled = true;
             updatePlayButton();
             updateStatus('已停止', '');
-        }
-
-        // 页面加载时获取语音列表
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => {
-                const voices = synth.getVoices();
-                const chineseVoice = voices.find(v => v.lang.includes('zh'));
-                if (chineseVoice) {
-                    console.log('使用中文语音:', chineseVoice.name);
-                }
-            };
+            progressBar.style.display = 'none';
         }
 
         // 页面卸载时停止播放
         window.addEventListener('beforeunload', () => {
-            synth.cancel();
+            if (audio) {
+                audio.pause();
+            }
         });
 
         // 初始化
