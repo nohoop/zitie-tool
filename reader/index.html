@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>作业播报 - YoBox</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent: #ff9500;
+            --accent-hover: #e68600;
+            --border: #d2d2d7;
+            color-scheme: light dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航 */
+        header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* 主内容区 */
+        main {
+            flex: 1;
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* 输入区域 */
+        .input-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            line-height: 1.8;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* 控制区域 */
+        .controls-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 70px;
+        }
+
+        /* 语速滑块 */
+        .speed-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(255,149,0,0.3);
+        }
+
+        .speed-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(255,149,0,0.3);
+        }
+
+        .speed-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255,149,0,0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(118,118,128,0.12);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(118,118,128,0.18);
+        }
+
+        /* 状态显示 */
+        .status-bar {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            transition: background 0.3s;
+        }
+
+        .status-indicator.playing {
+            background: #34c759;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .status-indicator.paused {
+            background: #ff9500;
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 示例按钮 */
+        .example-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .example-btn {
+            padding: 6px 12px;
+            background: rgba(118,118,128,0.1);
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .example-btn:hover {
+            background: rgba(118,118,128,0.16);
+        }
+
+        /* 暗色模式 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0b0b0c;
+                --card-bg: #161618;
+                --text-primary: #f5f5f7;
+                --text-secondary: #a1a1a6;
+                --border: rgba(255,255,255,0.1);
+            }
+
+            header {
+                background: rgba(22, 22, 24, 0.85);
+            }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            main {
+                padding: 16px;
+            }
+
+            .input-section, .controls-section {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        :is(button, a, textarea):focus-visible {
+            outline: 3px solid rgba(255, 149, 0, 0.4);
+            outline-offset: 3px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="../" class="back-link">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            返回
+        </a>
+        <span class="header-title">📖 作业播报</span>
+    </header>
+
+    <main>
+        <!-- 输入区域 -->
+        <div class="input-section">
+            <div class="section-label">
+                <span>输入作业内容</span>
+                <span class="char-count" id="charCount">0 字</span>
+            </div>
+            <textarea
+                id="textInput"
+                placeholder="请粘贴老师发的作业文字...&#10;&#10;例如：&#10;今天语文作业：&#10;1. 复习第1-5课生字，每个字写3遍&#10;2. 预习第6课，朗读课文3遍&#10;3. 背诵古诗《静夜思》"
+            ></textarea>
+            <div class="example-buttons">
+                <button class="example-btn" onclick="loadExample(1)">语文作业示例</button>
+                <button class="example-btn" onclick="loadExample(2)">数学作业示例</button>
+                <button class="example-btn" onclick="loadExample(3)">综合作业示例</button>
+            </div>
+        </div>
+
+        <!-- 控制区域 -->
+        <div class="controls-section">
+            <div class="section-label">播放设置</div>
+
+            <div class="control-row">
+                <span class="control-label">语速</span>
+                <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="2" step="0.1" value="1">
+                <span class="speed-value" id="speedValue">1.0x</span>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="playBtn" onclick="togglePlay()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    开始播放
+                </button>
+                <button class="btn btn-secondary" id="stopBtn" onclick="stopSpeaking()" disabled>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                    停止
+                </button>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span class="status-text" id="statusText">准备就绪</span>
+        </div>
+    </main>
+
+    <script>
+        // 获取元素
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+
+        // 语音合成
+        let synth = window.speechSynthesis;
+        let utterance = null;
+        let isPaused = false;
+        let isPlaying = false;
+
+        // 更新字数统计
+        textInput.addEventListener('input', () => {
+            charCount.textContent = `${textInput.value.length} 字`;
+        });
+
+        // 语速滑块
+        speedSlider.addEventListener('input', () => {
+            speedValue.textContent = `${parseFloat(speedSlider.value).toFixed(1)}x`;
+            // 如果正在播放，更新当前语音的语速
+            if (isPlaying && !isPaused) {
+                stopSpeaking();
+                speak();
+            }
+        });
+
+        // 示例文本
+        const examples = {
+            1: `今天语文作业：
+1. 复习第1-5课生字，每个字写3遍
+2. 预习第6课，朗读课文3遍给家长听
+3. 背诵古诗《静夜思》，并默写
+4. 完成练习册第8页`,
+
+            2: `今天数学作业：
+1. 完成口算练习题，第15页到第18页
+2. 复习20以内的加减法，准备明天测验
+3. 完成应用题3道，写在作业本上
+4. 预习下一课《认识图形》`,
+
+            3: `今日作业安排：
+
+语文：
+1. 朗读课文《秋天》3遍
+2. 生字本抄写生字，每个字写5遍
+3. 完成配套练习册第10页
+
+数学：
+1. 口算题卡第12页
+2. 复习凑十法
+
+其他：
+1. 跳绳100个
+2. 阅读20分钟课外书`
+        };
+
+        function loadExample(num) {
+            textInput.value = examples[num];
+            charCount.textContent = `${examples[num].length} 字`;
+            updateStatus('已加载示例文本', '');
+        }
+
+        function updateStatus(text, state) {
+            statusText.textContent = text;
+            statusIndicator.className = 'status-indicator';
+            if (state) {
+                statusIndicator.classList.add(state);
+            }
+        }
+
+        function togglePlay() {
+            if (isPlaying && isPaused) {
+                // 恢复播放
+                synth.resume();
+                isPaused = false;
+                updatePlayButton();
+                updateStatus('正在播放...', 'playing');
+            } else if (isPlaying) {
+                // 暂停播放
+                synth.pause();
+                isPaused = true;
+                updatePlayButton();
+                updateStatus('已暂停', 'paused');
+            } else {
+                // 开始播放
+                speak();
+            }
+        }
+
+        function updatePlayButton() {
+            if (isPaused) {
+                playBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    继续播放
+                `;
+            } else if (isPlaying) {
+                playBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <rect x="6" y="4" width="4" height="16"/>
+                        <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                    暂停
+                `;
+            } else {
+                playBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    开始播放
+                `;
+            }
+        }
+
+        function speak() {
+            const text = textInput.value.trim();
+            if (!text) {
+                updateStatus('请先输入要播报的内容', '');
+                return;
+            }
+
+            // 取消当前播放
+            synth.cancel();
+
+            utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = parseFloat(speedSlider.value);
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            // 尝试获取中文语音
+            const voices = synth.getVoices();
+            const chineseVoice = voices.find(v => v.lang.includes('zh'));
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+
+            utterance.onstart = () => {
+                isPlaying = true;
+                isPaused = false;
+                stopBtn.disabled = false;
+                updatePlayButton();
+                updateStatus('正在播放...', 'playing');
+            };
+
+            utterance.onend = () => {
+                isPlaying = false;
+                isPaused = false;
+                stopBtn.disabled = true;
+                updatePlayButton();
+                updateStatus('播放完成', '');
+            };
+
+            utterance.onerror = (event) => {
+                console.error('Speech error:', event.error);
+                isPlaying = false;
+                isPaused = false;
+                stopBtn.disabled = true;
+                updatePlayButton();
+                updateStatus('播放出错，请重试', '');
+            };
+
+            utterance.onpause = () => {
+                updateStatus('已暂停', 'paused');
+            };
+
+            utterance.onresume = () => {
+                updateStatus('正在播放...', 'playing');
+            };
+
+            synth.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            synth.cancel();
+            isPlaying = false;
+            isPaused = false;
+            stopBtn.disabled = true;
+            updatePlayButton();
+            updateStatus('已停止', '');
+        }
+
+        // 页面加载时获取语音列表
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                const voices = synth.getVoices();
+                const chineseVoice = voices.find(v => v.lang.includes('zh'));
+                if (chineseVoice) {
+                    console.log('使用中文语音:', chineseVoice.name);
+                }
+            };
+        }
+
+        // 页面卸载时停止播放
+        window.addEventListener('beforeunload', () => {
+            synth.cancel();
+        });
+
+        // 初始化
+        updateStatus('准备就绪', '');
+    </script>
+
+</body>
+</html>

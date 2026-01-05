@@ -101,7 +101,7 @@
         /* 工具卡片 */
         .tools-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-top: 20px;
         }
@@ -138,6 +138,7 @@
 
         .tag-main { color: var(--accent-blue); }
         .tag-green { color: var(--accent-green); }
+        .tag-orange { color: #ff9500; }
 
         .tool-title {
             font-size: 26px; font-weight: 700;
@@ -180,6 +181,10 @@
             background: radial-gradient(circle, rgba(52,199,89,0.08) 0%, transparent 70%);
         }
 
+        .tool-card.orange::before {
+            background: radial-gradient(circle, rgba(255,149,0,0.08) 0%, transparent 70%);
+        }
+
         /* 页脚 */
         footer {
             text-align: center;
@@ -209,20 +214,17 @@
         }
 
         /* 移动端适配 */
+        @media (max-width: 900px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .hero { padding: 50px 10px 40px; }
             h1 { font-size: 38px; }
             .subtitle { font-size: 16px; }
-
-            .tools-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .tool-card {
-                padding: 28px;
-            }
-
+            .tool-card { padding: 28px; }
             .tool-icon { font-size: 40px; }
             .tool-title { font-size: 22px; }
         }
@@ -275,6 +277,19 @@
                 <div class="tool-meta">
                     <span class="pill">A4 横版</span>
                     <span class="pill">田字格</span>
+                    <span class="pill">可调语速</span>
+                </div>
+            </a>
+
+            <!-- 作业播报 -->
+            <a href="reader/" class="tool-card orange">
+                <div class="tool-icon">📖</div>
+                <span class="tool-tag tag-orange">文字朗读</span>
+                <h2 class="tool-title">作业播报</h2>
+                <p class="tool-desc">粘贴老师发的作业文字，自动朗读给小朋友听。支持语速调节、暂停/继续。</p>
+                <div class="tool-meta">
+                    <span class="pill">完全免费</span>
+                    <span class="pill">中文语音</span>
                     <span class="pill">可调语速</span>
                 </div>
             </a>
