@@ -8,37 +8,46 @@
 
     <style>
         :root {
-            --bg-color: #f5f5f7;
-            --card-bg: #ffffff;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
             --text-primary: #1d1d1f;
             --text-secondary: #86868b;
-            --accent: #ff9500;
-            --accent-hover: #e68600;
-            --border: #d2d2d7;
-            color-scheme: light dark;
+            --accent: #ff6b00;
+            --border: rgba(0,0,0,0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #000000;
+                --bg-secondary: #1c1c1e;
+                --text-primary: #f5f5f7;
+                --text-secondary: #86868b;
+                --border: rgba(255,255,255,0.1);
+            }
         }
 
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
-            background: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+            background: var(--bg-secondary);
             color: var(--text-primary);
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* 顶部导航 */
+        /* 导航栏 */
         header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
             border-bottom: 1px solid var(--border);
             padding: 16px 20px;
             display: flex;
@@ -49,19 +58,31 @@
             z-index: 100;
         }
 
+        @media (prefers-color-scheme: dark) {
+            header {
+                background: rgba(28,28,30,0.72);
+            }
+        }
+
         .back-link {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             color: var(--accent);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
         }
 
         .header-title {
             font-size: 18px;
             font-weight: 600;
+            letter-spacing: -0.02em;
         }
 
         /* 主内容区 */
@@ -74,12 +95,12 @@
         }
 
         /* 输入区域 */
-        .input-section {
-            background: var(--card-bg);
+        .card {
+            background: var(--bg-primary);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
         }
 
         .section-label {
@@ -87,7 +108,7 @@
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.04em;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
@@ -102,20 +123,23 @@
 
         textarea {
             width: 100%;
-            min-height: 180px;
-            padding: 16px;
+            min-height: 160px;
+            padding: 14px;
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
             font-family: inherit;
             resize: vertical;
             outline: none;
-            transition: border-color 0.2s;
-            line-height: 1.8;
+            transition: all 0.2s;
+            line-height: 1.7;
+            background: var(--bg-secondary);
         }
 
         textarea:focus {
+            background: var(--bg-primary);
             border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(255,107,0,0.1);
         }
 
         textarea::placeholder {
@@ -124,14 +148,6 @@
         }
 
         /* 控制区域 */
-        .controls-section {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
-        }
-
         .control-row {
             display: flex;
             align-items: center;
@@ -146,23 +162,26 @@
         .control-label {
             font-size: 14px;
             font-weight: 500;
-            min-width: 70px;
+            min-width: 60px;
         }
 
         select {
             flex: 1;
-            padding: 10px 14px;
+            padding: 12px 14px;
             border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            background: #f5f5f7;
+            border-radius: 12px;
+            font-size: 15px;
+            background: var(--bg-secondary);
             outline: none;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
         select:focus {
+            background: var(--bg-primary);
             border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(255,107,0,0.1);
         }
 
         /* 语速滑块 */
@@ -171,7 +190,7 @@
             -webkit-appearance: none;
             appearance: none;
             height: 6px;
-            background: rgba(0,0,0,0.1);
+            background: var(--bg-secondary);
             border-radius: 3px;
             outline: none;
         }
@@ -184,7 +203,7 @@
             background: var(--accent);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(255,149,0,0.3);
+            box-shadow: 0 2px 8px rgba(255,107,0,0.3);
         }
 
         .speed-slider::-moz-range-thumb {
@@ -194,11 +213,11 @@
             border-radius: 50%;
             cursor: pointer;
             border: none;
-            box-shadow: 0 2px 6px rgba(255,149,0,0.3);
+            box-shadow: 0 2px 8px rgba(255,107,0,0.3);
         }
 
         .speed-value {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--accent);
             min-width: 45px;
@@ -209,15 +228,13 @@
         .button-group {
             display: flex;
             gap: 12px;
-            flex-wrap: wrap;
         }
 
         .btn {
             flex: 1;
-            min-width: 100px;
             padding: 14px 20px;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
@@ -236,29 +253,33 @@
         .btn-primary {
             background: var(--accent);
             color: white;
-            box-shadow: 0 4px 12px rgba(255,149,0,0.25);
+            box-shadow: 0 4px 16px rgba(255,107,0,0.25);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(255,107,0,0.3);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.98);
         }
 
         .btn-secondary {
-            background: rgba(118,118,128,0.12);
+            background: var(--bg-secondary);
             color: var(--text-primary);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: rgba(118,118,128,0.18);
+            background: var(--bg-primary);
         }
 
         /* 状态显示 */
         .status-bar {
-            background: var(--card-bg);
+            background: var(--bg-primary);
             border-radius: 16px;
             padding: 16px 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
             display: flex;
             align-items: center;
             gap: 12px;
@@ -288,7 +309,7 @@
 
         .status-text {
             flex: 1;
-            font-size: 14px;
+            font-size: 15px;
             color: var(--text-secondary);
         }
 
@@ -296,7 +317,7 @@
         .progress-bar {
             width: 100%;
             height: 4px;
-            background: rgba(0,0,0,0.1);
+            background: var(--bg-secondary);
             border-radius: 2px;
             overflow: hidden;
             margin-top: 8px;
@@ -319,37 +340,23 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 8px;
+            margin-top: 12px;
         }
 
         .example-btn {
-            padding: 6px 12px;
-            background: rgba(118,118,128,0.1);
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
             color: var(--text-secondary);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
 
         .example-btn:hover {
-            background: rgba(118,118,128,0.16);
-        }
-
-        /* 暗色模式 */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #0b0b0c;
-                --card-bg: #161618;
-                --text-primary: #f5f5f7;
-                --text-secondary: #a1a1a6;
-                --border: rgba(255,255,255,0.1);
-            }
-
-            header {
-                background: rgba(22, 22, 24, 0.85);
-            }
+            background: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         /* 移动端适配 */
@@ -358,7 +365,7 @@
                 padding: 16px;
             }
 
-            .input-section, .controls-section {
+            .card {
                 padding: 20px;
             }
 
@@ -372,9 +379,9 @@
         }
 
         :is(button, a, textarea, select):focus-visible {
-            outline: 3px solid rgba(255, 149, 0, 0.4);
-            outline-offset: 3px;
-            border-radius: 12px;
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -385,14 +392,14 @@
             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
                 <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            返回
+            返回 YoBox
         </a>
         <span class="header-title">📖 作业播报</span>
     </header>
 
     <main>
         <!-- 输入区域 -->
-        <div class="input-section">
+        <div class="card">
             <div class="section-label">
                 <span>输入作业内容</span>
                 <span class="char-count" id="charCount">0 字</span>
@@ -409,7 +416,7 @@
         </div>
 
         <!-- 控制区域 -->
-        <div class="controls-section">
+        <div class="card">
             <div class="section-label">播放设置</div>
 
             <div class="control-row">
@@ -476,7 +483,7 @@
         let isPlaying = false;
         let isLoading = false;
 
-        // Edge TTS API (使用免费的公共 API)
+        // Edge TTS API
         const EDGE_TTS_API = 'https://edge-tts.xiexin.tech/api/voice';
 
         // 更新字数统计
@@ -532,15 +539,16 @@
                 statusIndicator.classList.add(state);
             }
 
-            // 显示/隐藏进度条
-            if (state === 'playing') {
+            if (state === 'playing' || state === 'loading') {
                 progressBar.style.display = 'block';
-            } else if (state === 'loading') {
-                progressBar.style.display = 'block';
+            } else {
+                progressBar.style.display = 'none';
+            }
+
+            if (state === 'loading') {
                 progressFill.style.width = '100%';
                 progressFill.style.animation = 'pulse 1s ease-in-out infinite';
             } else {
-                progressBar.style.display = 'none';
                 progressFill.style.animation = 'none';
             }
         }
@@ -568,7 +576,6 @@
             if (isLoading) return;
 
             if (isPlaying && audio) {
-                // 暂停/继续
                 if (audio.paused) {
                     audio.play();
                     updateStatus('正在播放...', 'playing');
@@ -578,7 +585,6 @@
                 }
                 updatePlayButton();
             } else {
-                // 开始新播放
                 await speak();
             }
         }
@@ -590,7 +596,6 @@
                 return;
             }
 
-            // 停止当前播放
             if (audio) {
                 audio.pause();
                 audio = null;
@@ -606,7 +611,6 @@
                 const voice = voiceSelect.value;
                 const rate = parseFloat(speedSlider.value);
 
-                // 调用 Edge TTS API
                 const response = await fetch(`${EDGE_TTS_API}?text=${encodeURIComponent(text)}&voice=${voice}&rate=${rate}`);
 
                 if (!response.ok) {

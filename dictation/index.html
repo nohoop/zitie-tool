@@ -3,19 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YoBox 听写助手</title>
-    
-    <!-- 引入拼音库 (用于生成打印纸的拼音提示) -->
+    <title>听写助手 - YoBox</title>
     <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>">
 
     <style>
         :root {
-            --bg: #f5f5f7; --white: #fff; --accent: #007aff; 
-            --text: #1d1d1f; --border: #d2d2d7; --green: #34c759;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --sidebar-bg: rgba(255, 255, 255, 0.72);
+            --accent: #0066cc;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border: rgba(0,0,0,0.08);
             --grid-ink: #6e6aa8;
             --grid-ink-soft: rgba(110, 106, 168, 0.75);
         }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text); }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #000000;
+                --bg-secondary: #1c1c1e;
+                --sidebar-bg: rgba(28, 28, 30, 0.72);
+                --text-primary: #f5f5f7;
+                --text-secondary: #86868b;
+                --border: rgba(255,255,255,0.1);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
 
         .menu-btn {
             position: fixed;
@@ -24,39 +54,80 @@
             width: 44px;
             height: 44px;
             border-radius: 12px;
-            border: 1px solid rgba(0,0,0,0.12);
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            background: var(--sidebar-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 300;
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            color: var(--accent);
         }
-        .menu-btn:active { transform: scale(0.98); }
+
+        .menu-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        .menu-btn:active {
+            transform: scale(0.98);
+        }
 
         .overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.35);
+            background: rgba(0,0,0,0.3);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.25s ease;
+            transition: opacity 0.3s ease;
             z-index: 200;
+            backdrop-filter: blur(4px);
         }
-        .overlay.active { opacity: 1; pointer-events: auto; }
 
-        /* 侧边栏 (设置区) */
-        .sidebar {
-            width: 320px; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column;
-            z-index: 100; transition: transform 0.3s;
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
         }
-        .header { padding: 20px; border-bottom: 1px solid var(--border); position: relative; }
-        .back-link { text-decoration: none; color: var(--accent); font-size: 13px; display: flex; align-items: center; gap: 4px; margin-bottom: 10px; font-weight: 500; }
-        .title { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--accent);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         .sidebar-close {
             position: absolute;
@@ -65,9 +136,9 @@
             width: 36px;
             height: 36px;
             border-radius: 12px;
-            border: 1px solid rgba(0,0,0,0.10);
-            background: rgba(118,118,128,0.14);
-            color: var(--text);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             display: none;
             align-items: center;
             justify-content: center;
@@ -75,65 +146,216 @@
             font-size: 18px;
             line-height: 1;
         }
-        
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        
-        .control-group label { display: block; font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; }
-        textarea {
-            width: 100%; height: 120px; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
-            background: #f5f5f7; font-size: 16px; outline: none; resize: none; box-sizing: border-box;
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        textarea:focus { background: #fff; border-color: var(--accent); }
-        :is(button, a, textarea, input, select):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            font-size: 15px;
+            outline: none;
+            resize: none;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0,102,204,0.1);
+        }
 
         /* 胶囊选择器 */
-        .capsule-group { display: flex; background: #e5e5ea; padding: 3px; border-radius: 10px; gap: 3px; flex-wrap: wrap; }
-        .capsule { 
-            flex: 1; text-align: center; padding: 6px; font-size: 13px; border-radius: 8px; cursor: pointer; color: #666;
+        .capsule-group {
+            display: flex;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            flex-wrap: wrap;
         }
-        .capsule.active { background: #fff; color: #000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 500; }
+
+        .capsule {
+            flex: 1;
+            text-align: center;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .capsule:hover {
+            color: var(--text-primary);
+        }
+
+        .capsule.active {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
 
         .btn-print {
-            width: 100%; padding: 12px; background: var(--text); color: white;
-            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: auto;
+            width: 100%;
+            padding: 14px;
+            background: var(--text-primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: auto;
+            transition: all 0.2s;
         }
 
-        /* 主舞台 (播放器 + 预览) */
-        .main { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; background: var(--bg); overflow-y: auto; }
+        .btn-print:hover {
+            transform: scale(1.02);
+        }
 
-        /* 播放器卡片 (iOS Music 风格) */
+        .btn-print:active {
+            transform: scale(0.98);
+        }
+
+        /* 主舞台 */
+        .main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--bg-secondary);
+            overflow-y: auto;
+        }
+
+        /* 播放器卡片 */
         .player-card {
-            margin-top: 40px; width: 90%; max-width: 400px;
-            background: #fff; border-radius: 24px; padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center;
-            transition: 0.3s;
+            margin-top: 40px;
+            width: 90%;
+            max-width: 400px;
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: all 0.3s;
         }
-        .player-status { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .current-word { font-size: 48px; font-weight: 700; margin: 10px 0; height: 60px; line-height: 60px; }
-        .progress-info { font-size: 14px; color: #888; margin-bottom: 30px; }
-        
-        .controls { display: flex; justify-content: center; align-items: center; gap: 30px; }
-        .btn-ctrl { background: none; border: none; cursor: pointer; color: var(--text); transition: 0.2s; }
-        .btn-ctrl:active { transform: scale(0.9); }
-        .btn-play { 
-            width: 70px; height: 70px; background: var(--accent); color: white; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 20px rgba(0,122,255,0.3);
+
+        .player-status {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
         }
-        .btn-play svg { width: 30px; height: 30px; fill: currentColor; }
 
-        /* A4 打印预览 (在屏幕下方) */
-        .sheet-stack { margin-top: 40px; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+        .current-word {
+            font-size: 56px;
+            font-weight: 700;
+            margin: 12px 0;
+            height: 70px;
+            line-height: 70px;
+            letter-spacing: -0.02em;
+        }
 
-        /* 参考老师示例：A4 横向 + 田字格整页排版 */
+        .progress-info {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .btn-ctrl {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .btn-ctrl:hover {
+            background: var(--bg-secondary);
+        }
+
+        .btn-ctrl:active {
+            transform: scale(0.9);
+        }
+
+        .btn-play {
+            width: 72px;
+            height: 72px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 24px rgba(0,102,204,0.3);
+        }
+
+        .btn-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 32px rgba(0,102,204,0.4);
+        }
+
+        .btn-play svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        /* 打印预览 */
+        .sheet-stack {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
         .sheet-preview {
             width: 297mm;
             min-height: 210mm;
             background: white;
             padding: 8mm;
             box-sizing: border-box;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            border-radius: 12px;
         }
 
         .tian-grid-wrap {
@@ -160,8 +382,14 @@
             border-right: 1.2px solid var(--grid-ink);
             border-bottom: 1.2px solid var(--grid-ink);
         }
-        .tian-cell:nth-child(12n) { border-right: none; }
-        .tian-cell:nth-last-child(-n+12) { border-bottom: none; }
+
+        .tian-cell:nth-child(12n) {
+            border-right: none;
+        }
+
+        .tian-cell:nth-last-child(-n+12) {
+            border-bottom: none;
+        }
 
         .tian-cell::before {
             content: '';
@@ -173,6 +401,7 @@
             transform: translateX(-0.5px);
             pointer-events: none;
         }
+
         .tian-cell::after {
             content: '';
             position: absolute;
@@ -184,23 +413,35 @@
             pointer-events: none;
         }
 
-        /* 移动端：抽屉侧栏（参考“字帖工坊”） */
+        /* 移动端适配 */
         @media (max-width: 860px) {
-            .menu-btn { display: inline-flex; }
+            .menu-btn {
+                display: inline-flex;
+            }
 
-            body { height: 100dvh; overflow: hidden; }
+            body {
+                height: 100dvh;
+                overflow: hidden;
+            }
 
             .sidebar {
                 position: fixed;
-                top: 0; left: 0; bottom: 0;
+                top: 0;
+                left: 0;
+                bottom: 0;
                 width: min(320px, 86vw);
                 transform: translateX(-105%);
-                box-shadow: 2px 0 24px rgba(0,0,0,0.18);
-                border-right: 1px solid rgba(0,0,0,0.08);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.15);
                 z-index: 250;
             }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-close { display: inline-flex; }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-close {
+                display: inline-flex;
+            }
 
             .main {
                 overflow-y: auto;
@@ -208,19 +449,63 @@
                 padding-top: 68px;
             }
 
-            .player-card { margin-top: 16px; width: 92%; }
-            .sheet-stack { margin-top: 20px; margin-bottom: 28px; }
-            .sheet-preview { border-radius: 14px; }
+            .player-card {
+                margin-top: 16px;
+                width: 92%;
+                padding: 28px;
+            }
+
+            .current-word {
+                font-size: 48px;
+                height: 60px;
+                line-height: 60px;
+            }
+
+            .sheet-stack {
+                margin-top: 20px;
+                margin-bottom: 28px;
+            }
+
+            .sheet-preview {
+                border-radius: 14px;
+            }
         }
 
+        /* 打印样式 */
         @media print {
-            /* 避免“内容溢出可打印区域”导致空白页：@page 设为 0 边距，页面内用 padding 控制留白 */
-            @page { size: A4 landscape; margin: 0; }
-            html, body { width: 297mm; margin: 0; padding: 0; }
-            body { display: block; height: auto; overflow: visible; background: #fff; }
-            .sidebar, .player-card, .menu-btn, .overlay { display: none !important; }
-            .main { display: block; overflow: visible; padding: 0; }
-            .sheet-stack { margin: 0; gap: 0; }
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+
+            html, body {
+                width: 297mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                display: block;
+                height: auto;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .sidebar, .player-card, .menu-btn, .overlay {
+                display: none !important;
+            }
+
+            .main {
+                display: block;
+                overflow: visible;
+                padding: 0;
+            }
+
+            .sheet-stack {
+                margin: 0;
+                gap: 0;
+            }
+
             .sheet-preview {
                 margin: 0;
                 box-shadow: none;
@@ -232,17 +517,27 @@
                 box-sizing: border-box;
                 transform: none !important;
             }
-            .sheet-preview + .sheet-preview { page-break-before: always; break-before: page; }
+
+            .sheet-preview + .sheet-preview {
+                page-break-before: always;
+                break-before: page;
+            }
+        }
+
+        :is(button, a, textarea, input, select):focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
 
     <button class="menu-btn" type="button" aria-label="打开菜单" onclick="toggleSidebar(true)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="4" y1="7" x2="20" y2="7"></line>
-            <line x1="4" y1="12" x2="20" y2="12"></line>
-            <line x1="4" y1="17" x2="20" y2="17"></line>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
     </button>
     <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
@@ -251,12 +546,14 @@
         <div class="header">
             <button class="sidebar-close" type="button" aria-label="关闭菜单" onclick="toggleSidebar(false)">×</button>
             <a href="../" class="back-link">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                返回大厅
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                返回 YoBox
             </a>
             <div class="title">🎙️ 听写助手</div>
         </div>
-        
+
         <div class="content-area">
             <div class="control-group">
                 <label>听写内容 (空格或换行分隔)</label>
@@ -292,17 +589,23 @@
             <div class="player-status" id="statusText">准备就绪</div>
             <div class="current-word" id="displayWord">...</div>
             <div class="progress-info" id="progressText">0 / 0</div>
-            
+
             <div class="controls">
                 <button class="btn-ctrl" onclick="prevWord()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                        <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line>
+                    </svg>
                 </button>
                 <button class="btn-play" onclick="togglePlay()" id="playBtn">
                     <svg id="iconPlay" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     <svg id="iconPause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                 </button>
                 <button class="btn-ctrl" onclick="nextWord()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                        <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -356,7 +659,7 @@
             requestFit();
         });
         window.addEventListener('orientationchange', requestFit);
-        
+
         // 状态变量
         let words = [];
         let currentIndex = 0;
@@ -382,7 +685,7 @@
             // 解析词语（支持空格、换行、逗号）
             const text = inputEl.value;
             words = text.split(/[\s,\n]+/).filter(w => w.trim() !== '');
-            
+
             // 重置状态
             stop();
             currentIndex = 0;
@@ -447,14 +750,13 @@
             if (repeatTimes >= 3) textToRead += `${word}。`;
 
             const utter = new SpeechSynthesisUtterance(textToRead);
-            utter.rate = 0.9; // 语速稍慢
-            utter.pitch = 1.1; // 语调稍高，像老师
+            utter.rate = 0.9;
+            utter.pitch = 1.1;
             utter.lang = 'zh-CN';
 
             utter.onend = () => {
                 if (isPlaying) {
                     statusEl.innerText = "等待书写...";
-                    // 读完后等待
                     timeoutId = setTimeout(() => {
                         currentIndex++;
                         speakCurrentWord();
@@ -494,7 +796,7 @@
         function updateUI() {
             const iconPlay = document.getElementById('iconPlay');
             const iconPause = document.getElementById('iconPause');
-            
+
             if (isPlaying) {
                 iconPlay.style.display = 'none';
                 iconPause.style.display = 'block';
@@ -502,7 +804,7 @@
                 iconPlay.style.display = 'block';
                 iconPause.style.display = 'none';
             }
-            
+
             if (words.length > 0) {
                 displayEl.innerText = words[currentIndex];
                 progressEl.innerText = `${currentIndex + 1} / ${words.length}`;
@@ -516,7 +818,7 @@
         function renderSheet() {
             const cols = 12;
             const rows = 9;
-            const headerRows = 1; // 预留一行写日期
+            const headerRows = 1;
             const cellsPerPage = cols * rows;
             const startCell = cols * headerRows;
 
@@ -540,7 +842,7 @@
 
             words.forEach((word, index) => {
                 const chars = word.split('');
-                const required = 1 + chars.length + 1; // 序号格 + 字格 + 间隔 1 格
+                const required = 1 + chars.length + 1;
                 ensureSpace(required);
 
                 pages[pageIndex][cursor] = { type: 'num', value: index + 1 };
@@ -556,7 +858,6 @@
             const sheetsHtml = pages.map((page) => {
                 let gridHtml = '';
                 for (let i = 0; i < cellsPerPage; i++) {
-                    const cell = page[i];
                     gridHtml += `<div class="tian-cell"></div>`;
                 }
                 return `

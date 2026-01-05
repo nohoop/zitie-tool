@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YoBox 字帖工坊</title>
+    <title>字帖工坊 - YoBox</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://npm.elemecdn.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✏️</text></svg>">
+
     <style>
         :root {
-            --app-bg: #f2f2f7;
-            --sidebar-bg: rgba(255, 255, 255, 0.85);
-            --accent: #007aff; 
-            --text-main: #1d1d1f;
-            --text-sec: #86868b;
-            --border: #d2d2d7;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --sidebar-bg: rgba(255, 255, 255, 0.72);
+            --accent: #0066cc;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border: rgba(0,0,0,0.08);
             --grid-main: #2c8a4c;
             --grid-sub: #a1dcb6;
             --char-color: #333;
@@ -26,235 +28,655 @@
             --header-gap: 3mm;
         }
 
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #000000;
+                --bg-secondary: #1c1c1e;
+                --sidebar-bg: rgba(28, 28, 30, 0.72);
+                --text-primary: #f5f5f7;
+                --text-secondary: #86868b;
+                --border: rgba(255,255,255,0.1);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Text", sans-serif;
-            background: var(--app-bg); color: var(--text-main);
-            display: flex; height: 100vh; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- 侧边栏 (响应式抽屉) --- */
+        /* 侧边栏 */
         .sidebar {
-            width: 300px;
+            width: 320px;
             background: var(--sidebar-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border-right: 1px solid rgba(0,0,0,0.1);
-            display: flex; flex-direction: column;
-            z-index: 200; /* 高层级 */
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 200;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .brand-area { padding: 16px 16px 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        
+        .brand-area {
+            padding: 20px 20px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
         .back-link {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 13px; color: var(--accent); font-weight: 500;
-            text-decoration: none; margin-bottom: 12px; opacity: 0.9;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            margin-bottom: 16px;
+            font-weight: 500;
         }
 
-        .brand-title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-        .tag { background: linear-gradient(135deg, #007aff, #0051a8); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .brand-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
 
-        .search-box { position: relative; margin-bottom: 5px; }
+        .tag {
+            background: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
         .search-input {
-            width: 100%; padding: 8px 10px 8px 30px;
-            border-radius: 10px; border: 1px solid #d2d2d7;
-            background: rgba(118, 118, 128, 0.12);
-            font-size: 13px; outline: none; transition: 0.2s;
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
         }
-        .search-input:focus { background: white; border-color: var(--accent); }
-        .search-icon { position: absolute; left: 8px; top: 8px; opacity: 0.5; width: 14px; height: 14px; }
 
-        .course-list { flex: 1; overflow-y: auto; padding: 0 10px 10px; -webkit-overflow-scrolling: touch; }
-        
+        .search-input:focus {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0,102,204,0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.4;
+            width: 16px;
+            height: 16px;
+        }
+
+        .course-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px 12px;
+        }
+
         .group-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 8px; margin-top: 5px;
-            font-size: 13px; font-weight: 600; color: var(--text-sec);
-            cursor: pointer; border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
         }
-        .group-header:hover { background: rgba(0,0,0,0.03); color: var(--text-main); }
-        .group-arrow { width: 10px; height: 10px; opacity: 0.5; transition: transform 0.2s; }
-        .group-header.active .group-arrow { transform: rotate(90deg); }
 
-        .group-body { height: 0; overflow: hidden; opacity: 0; transition: all 0.3s ease; }
-        .group-body.expanded { height: auto; opacity: 1; padding-bottom: 5px; }
+        .group-header:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .group-arrow {
+            width: 10px;
+            height: 10px;
+            opacity: 0.4;
+            transition: transform 0.2s;
+        }
+
+        .group-header.active .group-arrow {
+            transform: rotate(90deg);
+        }
+
+        .group-body {
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .group-body.expanded {
+            height: auto;
+            opacity: 1;
+            padding-bottom: 8px;
+        }
 
         .course-item {
-            padding: 10px 10px 10px 22px;
-            font-size: 14px; color: var(--text-main);
-            border-radius: 8px; cursor: pointer; margin-bottom: 2px;
-            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 10px 10px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
         }
-        .course-item:active { background: rgba(0,0,0,0.05); }
-        .course-item.active { background: var(--accent); color: white; font-weight: 500; }
-        .course-item.hidden { display: none; }
-        .count-badge { font-size: 10px; opacity: 0.6; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; }
-        .course-item.active .count-badge { background: rgba(255,255,255,0.2); opacity: 0.9; }
+
+        .course-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .course-item.active {
+            background: var(--accent);
+            color: white;
+            font-weight: 500;
+        }
+
+        .course-item.hidden {
+            display: none;
+        }
+
+        .count-badge {
+            font-size: 11px;
+            opacity: 0.6;
+            background: var(--bg-primary);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .course-item.active .count-badge {
+            background: rgba(255,255,255,0.2);
+            opacity: 0.9;
+        }
 
         .settings-panel {
-            padding: 16px; background: white;
+            padding: 16px;
+            background: var(--bg-primary);
             border-top: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 12px;
-            /* 适配 iPhone 底部安全区 */
-            padding-bottom: env(safe-area-inset-bottom, 20px); 
-        }
-        .control-row { display: flex; flex-direction: column; gap: 4px; }
-        .lbl { font-size: 11px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; }
-        .density-hint { font-size: 11px; color: var(--text-sec); margin-top: 2px; min-height: 14px; }
-        
-        .batch-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-        .batch-btn { font-size: 12px; padding: 6px 12px; border-radius: 14px; border: 1px solid #d2d2d7; background: #f5f5f7; color: #333; cursor: pointer; }
-        .batch-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        input, select, textarea {
-            width: 100%; padding: 10px; border: 1px solid #e5e5ea; border-radius: 8px;
-            font-size: 14px; background: #f5f5f7; box-sizing: border-box; outline: none;
-            font-family: inherit; -webkit-appearance: none; /* 移除iOS默认样式 */
-        }
-        textarea { height: 60px; resize: none; }
-
-        /* --- 主界面 --- */
-        .main { flex: 1; display: flex; flex-direction: column; position: relative; transition: opacity 0.3s; }
-        
-        .toolbar {
-            height: 50px; background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
-            display: grid; grid-template-columns: auto 1fr auto;
-            align-items: center;
-            padding: 0 15px; position: sticky; top: 0; z-index: 10;
-        }
-        
-        /* 移动端菜单按钮 */
-        .menu-btn {
-            display: none; /* 默认隐藏 */
-            background: none; border: none; padding: 8px; margin-left: -8px; cursor: pointer; color: var(--accent);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
 
-        .doc-info { min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-        .doc-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(52vw, 520px); }
-        .load-status { font-size: 11px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: min(56vw, 560px); }
-        .load-actions { display: inline-flex; align-items: center; gap: 8px; }
-        .retry-btn {
-            border: 1px solid rgba(0,0,0,0.10);
-            background: rgba(118,118,128,0.14);
-            color: var(--text-main);
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .lbl {
             font-size: 12px;
             font-weight: 600;
-            padding: 6px 10px;
-            border-radius: 999px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .density-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .batch-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .batch-btn {
+            font-size: 13px;
+            padding: 8px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .batch-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        .batch-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            background: var(--bg-secondary);
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0,102,204,0.1);
+        }
+
+        textarea {
+            height: 70px;
+            resize: none;
+        }
+
+        select {
             cursor: pointer;
         }
-        .retry-btn:active { transform: scale(0.99); }
-        .retry-btn[hidden] { display: none; }
+
+        /* 主界面 */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg-secondary);
+        }
+
+        .toolbar {
+            height: 56px;
+            background: var(--sidebar-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: var(--accent);
+            border-radius: 8px;
+        }
+
+        .menu-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .doc-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .doc-name {
+            font-weight: 600;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .load-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .load-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .retry-btn {
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .retry-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        .retry-btn[hidden] {
+            display: none;
+        }
 
         .btn-print {
-            background: var(--accent); color: white; border: none;
-            padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; gap: 4px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
         }
-        :is(button, a, input, select, textarea):focus-visible { outline: 3px solid rgba(0, 122, 255, 0.35); outline-offset: 3px; border-radius: 12px; }
+
+        .btn-print:hover {
+            background: #0052a3;
+            transform: scale(1.02);
+        }
 
         /* 舞台与纸张 */
-        .stage { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            display: flex; justify-content: center; background: var(--app-bg);
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .sheet {
-            width: 210mm; min-height: 297mm; background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            padding: 15mm 12mm; box-sizing: border-box;
-            display: flex; flex-direction: column;
-            transform-origin: top center; /* 缩放原点 */
+        .stage {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            background: var(--bg-secondary);
         }
 
-        /* 内部格线 */
-        .sheet-header { 
-            height: var(--header-height); 
-            min-height: var(--header-height);
-            border-bottom: 1.4px solid var(--grid-main); 
-            display: flex; justify-content: space-between; align-items: flex-end; 
-            padding-bottom: 1.2mm; margin-bottom: var(--header-gap); 
-            font-family: "KaiTi", serif; font-size: 15px; color: #333; 
-            flex: 0 0 auto; box-sizing: border-box;
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 15mm 12mm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            transform-origin: top center;
         }
-        .sheet-title { font-weight: 600; letter-spacing: 0.5px; }
-        .sheet-meta { display: flex; align-items: flex-end; gap: 12px; font-size: 14px; }
-        .sheet-meta div { display: inline-flex; align-items: flex-end; gap: 4px; }
-        .sheet-content { flex: 0 0 auto; }
-        .underline { border-bottom: 1px solid var(--grid-main); min-width: 32mm; display: inline-block; text-align: center; height: 1.2em; }
-        .char-block { margin-bottom: var(--block-gap); break-inside: avoid; }
-        .char-block:last-child, .char-placeholder:last-child { margin-bottom: 0; }
-        .row { display: flex; height: calc(var(--grid-size) + var(--pinyin-height)); border-left: 1px solid var(--grid-main); }
-        .cell { width: var(--grid-size); height: 100%; position: relative; border-right: 1px solid var(--grid-main); border-bottom: 1px solid var(--grid-main); border-top: 1px solid var(--grid-main); display: flex; flex-direction: column; }
-        .pinyin { height: var(--pinyin-height); display: flex; align-items: center; justify-content: center; font-size: 9px; color: #666; font-family: Arial; border-bottom: 1px dashed var(--grid-sub); }
-        .hanzi { flex: 1; position: relative; }
-        .grid-lines { position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events: none; }
-        .char-svg { position: absolute; top:0; left:0; width:100%; height:100%; z-index:1; padding: 7%; box-sizing: border-box; }
-        .char-placeholder { 
+
+        .sheet-header {
+            height: var(--header-height);
+            min-height: var(--header-height);
+            border-bottom: 1.4px solid var(--grid-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 1.2mm;
+            margin-bottom: var(--header-gap);
+            font-family: "KaiTi", serif;
+            font-size: 15px;
+            color: #333;
+            flex: 0 0 auto;
+            box-sizing: border-box;
+        }
+
+        .sheet-title {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .sheet-meta {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .sheet-meta div {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .sheet-content {
+            flex: 0 0 auto;
+        }
+
+        .underline {
+            border-bottom: 1px solid var(--grid-main);
+            min-width: 32mm;
+            display: inline-block;
+            text-align: center;
+            height: 1.2em;
+        }
+
+        .char-block {
+            margin-bottom: var(--block-gap);
+            break-inside: avoid;
+        }
+
+        .char-block:last-child, .char-placeholder:last-child {
+            margin-bottom: 0;
+        }
+
+        .row {
+            display: flex;
+            height: calc(var(--grid-size) + var(--pinyin-height));
+            border-left: 1px solid var(--grid-main);
+        }
+
+        .cell {
+            width: var(--grid-size);
+            height: 100%;
+            position: relative;
+            border-right: 1px solid var(--grid-main);
+            border-bottom: 1px solid var(--grid-main);
+            border-top: 1px solid var(--grid-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pinyin {
+            height: var(--pinyin-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #666;
+            font-family: Arial;
+            border-bottom: 1px dashed var(--grid-sub);
+        }
+
+        .hanzi {
+            flex: 1;
+            position: relative;
+        }
+
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .char-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            padding: 7%;
+            box-sizing: border-box;
+        }
+
+        .char-placeholder {
             min-height: calc(var(--grid-size) + var(--pinyin-height));
             margin-bottom: var(--block-gap);
-            display: flex; align-items: center; justify-content: center; color: var(--text-sec); font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 13px;
         }
 
-        /* 遮罩层 */
         .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); z-index: 150;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
-            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(4px);
         }
-        .overlay.active { opacity: 1; pointer-events: auto; }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         #toast {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8); color: white; padding: 12px 24px;
-            border-radius: 12px; font-size: 14px; font-weight: 500;
-            opacity: 0; pointer-events: none; transition: 0.3s; z-index: 999;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+            z-index: 999;
         }
 
-        /* 📱 移动端适配 (Media Query) */
+        /* 移动端适配 */
         @media (max-width: 768px) {
             .sidebar {
-                position: fixed; top: 0; left: 0; bottom: 0;
-                transform: translateX(-100%); /* 默认隐藏在左侧 */
-                box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.15);
             }
-            .sidebar.open { transform: translateX(0); } /* 滑出 */
 
-            .menu-btn { display: block; } /* 显示菜单按钮 */
-            .main { width: 100%; }
-            
-            .stage { padding: 20px 10px; display: block; } /* 允许缩小 */
-            
-            /* 移动端预览自动缩放 (核心技巧) */
-            /* 我们不能改变 sheet 的物理尺寸(210mm)，否则打印就变小了 */
-            /* 而是用 transform: scale 视觉缩小它 */
-            /* 具体的 scale 值由 JS 动态计算 */
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .menu-btn {
+                display: block;
+            }
+
+            .main {
+                width: 100%;
+            }
+
+            .stage {
+                padding: 16px;
+            }
+
+            .toolbar {
+                padding: 0 16px;
+            }
         }
 
+        /* 打印样式 */
         @media print {
-            /* 关键：不要在 @page 里留边距，否则 210×297mm 的 .sheet 会溢出可打印区域，导致每张纸被拆成“内容页+空白页” */
-            @page { size: A4 portrait; margin: 0; }
-            html, body { width: 210mm; margin: 0; padding: 0; }
-            body { display: block; height: auto; overflow: visible; background: #fff; }
-            .sidebar, .toolbar, #toast, .overlay { display: none !important; }
-            .main, .stage { padding: 0; margin: 0; background: white; height: auto; display: block; }
-            .sheet { 
-                box-shadow: none; margin: 0; margin-bottom: 0 !important;
-                width: 210mm; height: 297mm; min-height: 0;
-                box-sizing: border-box;
-                page-break-inside: avoid; break-inside: avoid-page;
-                break-after: page; page-break-after: always;
-                transform: none !important; /* 打印时必须还原比例 */
+            @page {
+                size: A4 portrait;
+                margin: 0;
             }
-            .sheet:last-child { break-after: auto; page-break-after: auto; }
+
+            html, body {
+                width: 210mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                display: block;
+                height: auto;
+                overflow: visible;
+                background: #fff;
+            }
+
+            .sidebar, .toolbar, #toast, .overlay {
+                display: none !important;
+            }
+
+            .main, .stage {
+                padding: 0;
+                margin: 0;
+                background: white;
+                height: auto;
+                display: block;
+            }
+
+            .sheet {
+                box-shadow: none;
+                margin: 0;
+                margin-bottom: 0 !important;
+                width: 210mm;
+                height: 297mm;
+                min-height: 0;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+                break-inside: avoid-page;
+                break-after: page;
+                page-break-after: always;
+                transform: none !important;
+            }
+
+            .sheet:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+        }
+
+        :is(button, a, input, select, textarea):focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 8px;
         }
     </style>
-    
 </head>
 <body>
 
@@ -264,17 +686,22 @@
     <aside class="sidebar" id="sidebar">
         <div class="brand-area">
             <a href="../" class="back-link">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                返回 YoBox 大厅
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                返回 YoBox
             </a>
-            
+
             <div class="brand-title">✏️ 字帖工坊 <span class="tag">V16.0</span></div>
             <div class="search-box">
-                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
                 <input type="text" class="search-input" placeholder="搜索课程..." oninput="filterCourses(this.value)">
             </div>
         </div>
-        
+
         <div class="course-list" id="menuRoot"></div>
 
         <div class="settings-panel">
@@ -287,10 +714,10 @@
                 <span class="lbl">生字内容</span>
                 <textarea id="inputStr">天地人金木水火土</textarea>
             </div>
-            
+
             <div class="control-row">
                 <span class="lbl">设置</span>
-                <div style="display:flex; gap:8px;">
+                <div style="display:flex; gap:10px;">
                     <select id="gridType" onchange="render()" style="flex:1">
                         <option value="tian">田字格</option>
                         <option value="mi">米字格</option>
@@ -300,7 +727,7 @@
                     </select>
                 </div>
                 <div class="density-hint" id="densityHint"></div>
-                <div style="display:flex; gap:8px; margin-top:4px;">
+                <div style="display:flex; gap:10px; margin-top:8px;">
                     <select id="mode" onchange="render()" style="flex:1">
                         <option value="progressive">渐隐</option>
                         <option value="trace">描红</option>
@@ -316,9 +743,12 @@
 
     <main class="main">
         <div class="toolbar">
-            <!-- 移动端汉堡菜单 -->
             <button class="menu-btn" onclick="toggleSidebar(true)">
-                <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
             </button>
 
             <div class="doc-info">
@@ -329,8 +759,12 @@
                 </div>
             </div>
             <button class="btn-print" type="button" onclick="window.print()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span style="margin-left:4px">打印</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>打印</span>
             </button>
         </div>
         <div class="stage">
@@ -339,14 +773,13 @@
     </main>
 
     <script>
-        // 数据库 (保持原样，省略部分以节省长度，功能不变)
+        // 数据库
         const DB = [
             { grade: "🟢 一年级", lessons: [ { t: "上册全集", c: "一二三上口目耳手日田禾火虫云山八十了子人大月儿头里可东西天四是女开水去来不小少牛果鸟早书刀尺本木林土力心中五立正在后我好长比巴把下个雨们问有半从你才明同学自己衣白的又和竹牙马用几只石多出见对妈全回" }, { t: "下册全集", c: "春风冬雪花飞入姓什么双国王方青清气晴情请生字左右红时动万吃叫主江住没以会走北京门广过各样伙伴这太阳校金秋因为也他地河说听哥单居招呼快乐玩很当音讲行许思床前光低故乡色外看爸晚笑再午节叶米真分豆那着到高兴千成间迷造运池欢网古凉细夕李语香打拍跑足声身体之相近习远玉义首采无树爱尖角亮机台放鱼朵美直呀边呢吗加文次找平办让包钟元洗共已经坐要连百还舌点块非常往瓜进空医别干奇七星吓怕跟家羊象都捉条爬姐您草房" } ] },
             { grade: "🔵 二年级", lessons: [ { t: "上册全集", c: "两哪宽顶眼睛肚皮孩跳变极片傍海洋作坏给带法如脚它娃她毛更知识小桥流水人家群队旗铜号领巾杨壮桐枫松柏棉杉化桂歌写丛深六熊猫朋友季吹肥农忙归爱辛苦年百花李吴郑梁陈赵钱孙周王官张古诗村童碧妆绿丝剪" }, { t: "下册全集", c: "古诗村童碧妆绿丝剪冲寻姑娘吐柳荡桃杏鲜邮递员原叔局堆礼邓植格引注满休息站贴画母爱对叶圆片沙海滩军舰帆号巾铜领队旗杨壮桐枫松柏棉杉化桂歌写丛深六熊猫朋友季吹肥农忙归爱辛苦" } ] },
             { grade: "👶 扩展练习", lessons: [ { t: "数字 0-10", c: "零一二三四五六七八九十" }, { t: "必背古诗", c: "鹅鹅鹅曲项向天歌白毛浮绿水红掌拨清波床前明月光疑是地上霜" } ] }
         ];
 
-        // 核心逻辑：字形数据加载（更快、更稳：编码 + 超时 + 重试 + 并发限制）
         const charCache = new Map();
         const inflightChar = new Map();
         let preferredSourceIndex = 0;
@@ -414,7 +847,6 @@
             const encoded = encodeURIComponent(char);
             const urls = CHAR_DATA_SOURCES.map((mk) => mk(encoded));
 
-            // Round 1: try preferred CDN first (reduces request fan-out and tail latency)
             try {
                 const idx = Math.min(Math.max(preferredSourceIndex, 0), urls.length - 1);
                 const preferred = fetchJsonWithTimeout(urls[idx], { timeoutMs: 3500, cacheMode: 'force-cache' });
@@ -424,7 +856,6 @@
                 // ignore and fallback to racing
             }
 
-            // Round 2: race CDNs, prefer cache
             try {
                 const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'force-cache' }));
                 const data = await firstSuccessful(tasks.map((t, idx) => ({
@@ -436,7 +867,6 @@
                 })));
                 return data;
             } catch {
-                // Round 3: race again, bypass cache (handles occasional bad edge cache)
                 const tasks = urls.map((u) => fetchJsonWithTimeout(u, { timeoutMs: 6500, cacheMode: 'no-store' }));
                 const data = await firstSuccessful(tasks.map((t, idx) => ({
                     ...t,
@@ -497,7 +927,7 @@
         const SHEET_WIDTH_MM = 210;
         const PADDING_LEFT_MM = 12;
         const PADDING_RIGHT_MM = 12;
-        const GRID_LINE_ALLOWANCE_MM = 3; // 预留边框线占用，避免溢出导致浏览器自动缩放
+        const GRID_LINE_ALLOWANCE_MM = 3;
         const PADDING_TOP_MM = 15;
         const PADDING_BOTTOM_MM = 15;
         const HEADER_HEIGHT_MM = 14;
@@ -604,7 +1034,6 @@
             retryFailed();
         });
 
-        // IndexedDB 缓存：弱网/重复打开提速（失败不影响主流程）
         const idb = (() => {
             let dbp = null;
             function open() {
@@ -654,7 +1083,7 @@
                 header.innerHTML = `<span>${group.grade}</span><svg class="group-arrow" viewBox="0 0 1024 1024" width="10"><path d="M340.992 822.464l369.856-310.272-369.856-310.464z" fill="currentColor"/></svg>`;
                 const body = document.createElement('div');
                 body.className = `group-body ${idx===0?'expanded':''}`;
-                
+
                 group.lessons.forEach(l => {
                     const item = document.createElement('div');
                     item.className = 'course-item';
@@ -662,7 +1091,7 @@
                     item.innerHTML = `<span>${l.t}</span><span class="count-badge">${l.c.length}字</span>`;
                     item.onclick = (e) => {
                         e.stopPropagation();
-                        if(window.innerWidth <= 768) toggleSidebar(false); // 手机端选中后自动收起菜单
+                        if(window.innerWidth <= 768) toggleSidebar(false);
                         document.querySelectorAll('.course-item').forEach(x=>x.classList.remove('active'));
                         item.classList.add('active');
                         handleSelection(l.t, l.c);
@@ -673,7 +1102,7 @@
                 menuRoot.appendChild(header); menuRoot.appendChild(body);
             });
             render();
-            autoScale(); // 初始化缩放
+            autoScale();
         }
 
         function handleSelection(t, c) {
@@ -732,7 +1161,6 @@
                 preview.appendChild(sheet);
             }
 
-            // 预取：限制并发，避免网络拥塞导致“加载失败”
             const uniqueChars = Array.from(placeholdersByChar.keys());
             const total = uniqueChars.length;
             let done = 0;
@@ -769,10 +1197,10 @@
                 }
             });
             if (token === renderToken) {
-                if (lastFailedChars.size > 0) setLoadStatus(`加载完成（失败 ${lastFailedChars.size}，可点“重试失败”）`);
+                if (lastFailedChars.size > 0) setLoadStatus(`加载完成（失败 ${lastFailedChars.size}，可点"重试失败"）`);
                 else setLoadStatus('加载完成');
             }
-            autoScale(); // 渲染后再次缩放
+            autoScale();
         }
 
         async function retryFailed() {
@@ -833,7 +1261,6 @@
             d.appendChild(hd); return d;
         }
 
-        // --- 移动端交互逻辑 ---
         function toggleSidebar(show) {
             const sb = document.getElementById('sidebar');
             const ol = document.getElementById('overlay');
@@ -841,20 +1268,18 @@
             else { sb.classList.remove('open'); ol.classList.remove('active'); }
         }
 
-        // 核心：自动缩放预览图
         function autoScale() {
-            if(window.innerWidth > 768) { 
+            if(window.innerWidth > 768) {
                 document.querySelectorAll('.sheet').forEach(s => { s.style.transform = 'none'; s.style.marginBottom = '0'; });
-                return; 
+                return;
             }
-            // 手机端：计算缩放比例
-            const stageWidth = document.querySelector('.stage').offsetWidth - 40; // 减去padding
-            const paperWidth = 210 * 3.78; // A4 mm 转 px (大概 794px)
+            const stageWidth = document.querySelector('.stage').offsetWidth - 32;
+            const paperWidth = 210 * 3.78;
             const scale = stageWidth / paperWidth;
-            
+
             document.querySelectorAll('.sheet').forEach(s => {
                 s.style.transform = `scale(${scale})`;
-                s.style.marginBottom = `-${(1-scale)*297*3.78}px`; // 修正缩放后的空白
+                s.style.marginBottom = `-${(1-scale)*297*3.78}px`;
             });
         }
 
@@ -875,7 +1300,7 @@
         }
 
         inputStr.addEventListener('input', ()=>{ clearTimeout(timer); batchRow.style.display='none'; timer=setTimeout(render,500); });
-        window.addEventListener('resize', autoScale); // 屏幕旋转时重新计算
+        window.addEventListener('resize', autoScale);
         window.onload = initMenu;
     </script>
 </body>
