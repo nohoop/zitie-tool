@@ -337,6 +337,67 @@
             color: var(--text-primary);
         }
 
+        .hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .pill-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .pill-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .pill-toggle span {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-secondary);
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .pill-toggle span::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            transition: all 0.2s;
+        }
+
+        .pill-toggle input:checked + span {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .pill-toggle input:checked + span::before {
+            transform: translateX(20px);
+        }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
             main {
@@ -419,6 +480,45 @@
             </div>
         </div>
 
+        <!-- 高级播报 -->
+        <div class="card">
+            <div class="section-label">
+                <div class="toggle-row">
+                    <span>高级播报（自定义接口）</span>
+                    <label class="pill-toggle">
+                        <input type="checkbox" id="enableCustomApi">
+                        <span></span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="customApiPanel" style="display:none; margin-top: 12px; gap: 12px; grid-template-columns: 1fr;">
+                <div class="control-row" style="align-items: flex-start;">
+                    <span class="control-label" style="min-width:80px;">接口地址</span>
+                    <input id="customApiUrl" placeholder="例如：https://your-proxy/api/tts">
+                </div>
+                <div class="control-row" style="align-items: flex-start;">
+                    <span class="control-label" style="min-width:80px;">接口密钥</span>
+                    <input id="customApiKey" type="password" placeholder="Bearer Token，将仅存本地">
+                </div>
+                <div class="control-row" style="align-items: flex-start;">
+                    <span class="control-label" style="min-width:80px;">模型/声线</span>
+                    <input id="customModel" placeholder="如 deepseek-tts / spark-lite / chattts-1">
+                </div>
+                <div class="control-row">
+                    <span class="control-label" style="min-width:80px;">响应类型</span>
+                    <select id="customResponseMode">
+                        <option value="audio">返回音频（audioUrl 或 audioBase64）</option>
+                        <option value="text">返回文本（再用本地语音播报）</option>
+                    </select>
+                </div>
+                <div class="hint">
+                    接口需接受 POST JSON：{ text, model, speed }，可选 Authorization: Bearer &lt;token&gt;。<br>
+                    音频模式：返回 audioUrl / audioBase64(+mimeType)。文本模式：返回 text / content / output 字段。
+                </div>
+            </div>
+        </div>
+
         <!-- 状态栏 -->
         <div class="status-bar">
             <div class="status-indicator" id="statusIndicator"></div>
@@ -436,12 +536,19 @@
         const stopBtn = document.getElementById('stopBtn');
         const statusIndicator = document.getElementById('statusIndicator');
         const statusText = document.getElementById('statusText');
+        const enableCustomApi = document.getElementById('enableCustomApi');
+        const customApiPanel = document.getElementById('customApiPanel');
+        const customApiUrl = document.getElementById('customApiUrl');
+        const customApiKey = document.getElementById('customApiKey');
+        const customModel = document.getElementById('customModel');
+        const customResponseMode = document.getElementById('customResponseMode');
 
         // 语音合成
         let synth = window.speechSynthesis;
         let utterance = null;
         let isPaused = false;
         let isPlaying = false;
+        let customAudio = null;
 
         // 更新字数统计
         textInput.addEventListener('input', () => {
@@ -502,6 +609,16 @@
         }
 
         function updatePlayButton() {
+            const useCustom = enableCustomApi?.checked;
+            if (useCustom && isPlaying) {
+                playBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                    停止高级播报
+                `;
+                return;
+            }
             if (isPaused) {
                 playBtn.innerHTML = `
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -528,6 +645,14 @@
         }
 
         async function togglePlay() {
+            if (enableCustomApi?.checked) {
+                if (isPlaying) {
+                    stopSpeaking();
+                } else {
+                    await playViaCustomApi();
+                }
+                return;
+            }
             if (isPlaying && isPaused) {
                 // 恢复播放
                 synth.resume();
@@ -546,8 +671,98 @@
             }
         }
 
-        function speak() {
+        async function playViaCustomApi() {
             const text = textInput.value.trim();
+            if (!text) {
+                updateStatus('请先输入要播报的内容', '');
+                return;
+            }
+            const apiUrl = customApiUrl.value.trim();
+            if (!apiUrl) {
+                updateStatus('请填写自定义接口地址', '');
+                return;
+            }
+            stopSpeaking();
+            updateStatus('向自定义接口请求中…', '');
+            const payload = {
+                text,
+                model: customModel.value.trim() || undefined,
+                speed: parseFloat(speedSlider.value)
+            };
+            const headers = { 'Content-Type': 'application/json' };
+            if (customApiKey.value.trim()) {
+                headers['Authorization'] = `Bearer ${customApiKey.value.trim()}`;
+            }
+
+            let data = null;
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                data = await res.json();
+            } catch (err) {
+                console.error('custom api error', err);
+                updateStatus(`调用接口失败：${err.message}`, '');
+                return;
+            }
+
+            if (customResponseMode.value === 'audio') {
+                const audioUrl = data?.audioUrl || data?.url;
+                const audioBase64 = data?.audioBase64 || data?.base64;
+                const mime = data?.mimeType || 'audio/mpeg';
+                let src = audioUrl;
+                if (!src && audioBase64) src = `data:${mime};base64,${audioBase64}`;
+                if (!src) {
+                    updateStatus('接口未返回 audioUrl/audioBase64', '');
+                    return;
+                }
+                try {
+                    customAudio = new Audio(src);
+                    customAudio.onplay = () => {
+                        isPlaying = true;
+                        isPaused = false;
+                        stopBtn.disabled = false;
+                        updatePlayButton();
+                        updateStatus('正在播放...', 'playing');
+                    };
+                    customAudio.onended = () => {
+                        isPlaying = false;
+                        isPaused = false;
+                        stopBtn.disabled = true;
+                        updatePlayButton();
+                        updateStatus('播放完成', '');
+                        customAudio = null;
+                    };
+                    customAudio.onerror = () => {
+                        isPlaying = false;
+                        isPaused = false;
+                        stopBtn.disabled = true;
+                        updatePlayButton();
+                        updateStatus('播放出错，请检查音频', '');
+                        customAudio = null;
+                    };
+                    await customAudio.play();
+                } catch (err) {
+                    console.error('audio play error', err);
+                    updateStatus(`音频播放失败：${err.message}`, '');
+                }
+            } else {
+                const newText = data?.text || data?.content || data?.output;
+                if (!newText) {
+                    updateStatus('接口未返回文本字段', '');
+                    return;
+                }
+                textInput.value = newText;
+                charCount.textContent = `${newText.length} 字`;
+                speak(newText);
+            }
+        }
+
+        function speak(customText) {
+            const text = (customText ?? textInput.value).trim();
             if (!text) {
                 updateStatus('请先输入要播报的内容', '');
                 return;
@@ -606,6 +821,10 @@
         }
 
         function stopSpeaking() {
+            if (customAudio) {
+                try { customAudio.pause(); } catch (e) { /* ignore */ }
+                customAudio = null;
+            }
             synth.cancel();
             isPlaying = false;
             isPaused = false;
@@ -630,7 +849,42 @@
             synth.cancel();
         });
 
+        // 高级播报设置存储
+        const LS_KEY = 'yobox-reader-custom-api';
+        function saveCustomConfig() {
+            const payload = {
+                enabled: !!enableCustomApi.checked,
+                apiUrl: customApiUrl.value.trim(),
+                apiKey: customApiKey.value.trim(),
+                model: customModel.value.trim(),
+                responseMode: customResponseMode.value
+            };
+            try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+        }
+
+        function loadCustomConfig() {
+            let cfg = null;
+            try { cfg = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) { /* ignore */ }
+            if (!cfg) return;
+            enableCustomApi.checked = !!cfg.enabled;
+            customApiUrl.value = cfg.apiUrl || '';
+            customApiKey.value = cfg.apiKey || '';
+            customModel.value = cfg.model || '';
+            if (cfg.responseMode) customResponseMode.value = cfg.responseMode;
+            customApiPanel.style.display = enableCustomApi.checked ? 'grid' : 'none';
+        }
+
+        enableCustomApi.addEventListener('change', () => {
+            customApiPanel.style.display = enableCustomApi.checked ? 'grid' : 'none';
+            saveCustomConfig();
+        });
+        [customApiUrl, customApiKey, customModel, customResponseMode].forEach(el => {
+            el.addEventListener('change', saveCustomConfig);
+            el.addEventListener('input', saveCustomConfig);
+        });
+
         // 初始化
+        loadCustomConfig();
         updateStatus('准备就绪', '');
     </script>
 
