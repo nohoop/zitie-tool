@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>YoBox - 让陪伴更简单</title>
-    
+
     <!-- SEO & Social -->
-    <meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版生字字帖生成器、数位计数器、听写助手。无广告，即开即用。">
-    <meta name="keywords" content="字帖生成器,人教版生字,一年级数学,数位计数器,语文听写,在线听写,田字格打印,小学生作业,免费打印">
+    <meta name="description" content="YoBox 呦呦盒子 - 专为小学生家长设计的免费打印工具箱。包含人教版生字字帖生成器、听写助手。无广告，即开即用。">
+    <meta name="keywords" content="字帖生成器,人教版生字,语文听写,在线听写,田字格打印,小学生作业,免费打印">
     <meta property="og:title" content="YoBox - 小学生作业神器">
-    <meta property="og:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、数学专项练习、自动听写，A4完美打印。">
+    <meta property="og:description" content="一键生成人教版字帖、自动听写，A4完美打印。">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="YoBox - 小学生作业神器">
-    <meta name="twitter:description" content="受不了手抄生字？试试这个免费工具！一键生成人教版字帖、数学专项练习、自动听写，A4完美打印。">
+    <meta name="twitter:description" content="一键生成人教版字帖、自动听写，A4完美打印。">
     <meta name="theme-color" content="#f5f5f7">
     <meta name="color-scheme" content="light dark">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
@@ -25,6 +25,7 @@
             --text-primary: #1d1d1f;
             --text-secondary: #86868b;
             --accent-blue: #0071e3;
+            --accent-green: #34c759;
             --transition: cubic-bezier(0.25, 0.1, 0.25, 1);
             color-scheme: light dark;
         }
@@ -36,155 +37,164 @@
             color: var(--text-primary);
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .skip-link {
-            position: absolute;
-            left: 16px;
-            top: 12px;
-            padding: 10px 12px;
-            background: var(--card-bg);
-            color: var(--text-primary);
+        :is(a, button):focus-visible {
+            outline: 3px solid rgba(0, 113, 227, 0.55);
+            outline-offset: 4px;
             border-radius: 12px;
-            text-decoration: none;
-            box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-            transform: translateY(-200%);
-            transition: transform 0.2s ease;
-            z-index: 1000;
         }
-        .skip-link:focus { transform: translateY(0); }
-        :is(a, button, input, select, textarea):focus-visible { outline: 3px solid rgba(0, 113, 227, 0.55); outline-offset: 4px; border-radius: 12px; }
 
         /* 导航栏 */
         nav {
-            max-width: 980px; margin: 0 auto; padding: 20px;
+            max-width: 900px; margin: 0 auto; padding: 24px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(245, 245, 247, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
         }
-        .nav-logo { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px; }
-        .nav-logo span { font-size: 22px; }
-        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 12px; transition: color 0.3s; }
+
+        .nav-logo {
+            font-size: 20px; font-weight: 600; letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .nav-logo span { font-size: 26px; }
+
+        .nav-link {
+            color: var(--text-secondary); text-decoration: none;
+            font-size: 13px; transition: color 0.3s;
+        }
+
         .nav-link:hover { color: var(--text-primary); }
-        .nav-link:focus-visible { outline: 3px solid rgba(0, 113, 227, 0.55); outline-offset: 4px; border-radius: 10px; }
+
+        /* 主内容区 */
+        main {
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
         /* 英雄区 */
         .hero {
-            text-align: center; padding: 60px 20px 50px;
-            animation: fadeIn 1s ease-out;
+            text-align: center;
+            padding: 80px 20px 60px;
+            animation: fadeIn 0.8s ease-out;
         }
+
         h1 {
-            font-size: 48px; font-weight: 700; letter-spacing: -1.5px; margin: 0 0 12px; line-height: 1.1;
+            font-size: 52px; font-weight: 700; letter-spacing: -1.5px;
+            margin: 0 0 16px; line-height: 1.1;
             background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+
         .subtitle {
-            font-size: 20px; color: var(--text-secondary); font-weight: 400;
-            max-width: 600px; margin: 0 auto; line-height: 1.5;
+            font-size: 19px; color: var(--text-secondary); font-weight: 400;
+            max-width: 500px; margin: 0 auto; line-height: 1.6;
         }
 
-        /* Bento Grid 布局 */
-        .bento-grid {
+        /* 工具卡片 */
+        .tools-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            grid-auto-rows: minmax(240px, auto);
-            gap: 24px;
-            max-width: 980px; margin: 0 auto 60px; padding: 0 20px;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
         }
 
-        /* 卡片通用样式 */
-        .card {
+        .tool-card {
             background: var(--card-bg);
-            border-radius: 28px;
-            padding: 40px;
-            position: relative; overflow: hidden;
-            text-decoration: none; color: inherit;
-            transition: transform 0.4s var(--transition), box-shadow 0.4s var(--transition);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-            border: 1px solid rgba(0,0,0,0.02);
-            display: flex; flex-direction: column;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .card:hover {
-            transform: scale(1.015);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            z-index: 10;
-        }
-        a.card:focus-visible {
-            outline: 3px solid rgba(0, 113, 227, 0.55);
-            outline-offset: 6px;
+            border-radius: 24px;
+            padding: 36px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s var(--transition);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
         }
 
-        .card-meta {
-            margin-top: 14px;
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .tool-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .tool-tag {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 8px; display: inline-block;
+        }
+
+        .tag-main { color: var(--accent-blue); }
+        .tag-green { color: var(--accent-green); }
+
+        .tool-title {
+            font-size: 26px; font-weight: 700;
+            margin: 0 0 10px; letter-spacing: -0.5px;
+        }
+
+        .tool-desc {
+            font-size: 15px; color: var(--text-secondary);
+            line-height: 1.5; margin: 0;
+        }
+
+        .tool-meta {
+            margin-top: 18px;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-        .pill {
-            display: inline-flex;
-            align-items: center;
             gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(118,118,128,0.12);
-            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .pill {
+            font-size: 11px; padding: 5px 10px; border-radius: 6px;
+            background: rgba(118,118,128,0.1);
             color: var(--text-secondary);
-            font-weight: 600;
+            font-weight: 500;
         }
 
-        /* 主卡片 (字帖) */
-        .card-main {
-            grid-column: 1 / -1;
-            background: white;
-            display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-            min-height: 320px;
+        /* 装饰背景 */
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0,113,227,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
         }
-        .card-main .content { z-index: 2; max-width: 55%; }
-        
-        .card-main .visual {
-            position: absolute; right: -20px; top: 20px; width: 55%; height: 120%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="100" fill="%23f5f5f7" rx="5"/><line x1="10" y1="60" x2="90" y2="60" stroke="%23e5e5ea" stroke-dasharray="4"/><line x1="50" y1="10" x2="50" y2="110" stroke="%23e5e5ea" stroke-dasharray="4"/><text x="50" y="75" font-family="KaiTi" font-size="60" text-anchor="middle" fill="%23333">永</text></svg>') no-repeat center;
-            opacity: 0.9; transform: rotate(-5deg); transition: transform 0.5s;
-            background-size: contain;
-        }
-        .card-main:hover .visual { transform: rotate(0deg) scale(1.05); }
 
-        /* 次要卡片 */
-        .card-sub {
-            justify-content: flex-start;
-            background: #fff;
-            gap: 15px;
-            min-height: 280px;
+        .tool-card.green::before {
+            background: radial-gradient(circle, rgba(52,199,89,0.08) 0%, transparent 70%);
         }
-        
-        /* 文本样式 */
-        .card-tag { font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 0.5px; }
-        .card-title { font-size: 32px; font-weight: 700; margin: 0; letter-spacing: -0.8px; }
-        .card-desc { 
-            font-size: 17px; color: var(--text-secondary); line-height: 1.5; font-weight: 400; 
-            margin-top: 5px; 
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: auto;
+            border-top: 1px solid rgba(0,0,0,0.06);
         }
-        
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
+
+        .copyright {
+            color: var(--text-secondary);
             font-size: 12px;
-            font-weight: 600;
-            align-self: flex-start;
+            opacity: 0.7;
         }
-        .badge--new { background: #ff3b30; color: #fff; }
-        .badge--online { background: #34c759; color: #fff; }
-        .badge--blue { background: #007aff; color: #fff; }
 
-        footer { text-align: center; padding: 40px 20px; margin-top: 40px; }
-        .copyright { color: var(--text-secondary); font-size: 12px; opacity: 0.7; }
-
+        /* 暗色模式 */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #0b0b0c;
@@ -193,236 +203,79 @@
                 --text-secondary: #a1a1a6;
                 --accent-blue: #2997ff;
             }
-            nav { background: rgba(11, 11, 12, 0.72); }
-            h1 { background: linear-gradient(135deg, #f5f5f7 0%, #c7c7cc 100%); }
-            .card { border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 24px rgba(0,0,0,0.24); }
-            .card:hover { box-shadow: 0 20px 40px rgba(0,0,0,0.35); }
-            .card-main .visual { opacity: 0.65; }
+            h1 {
+                background: linear-gradient(135deg, #f5f5f7 0%, #c7c7cc 100%);
+            }
         }
 
-        /* 📱 移动端适配 */
+        /* 移动端适配 */
         @media (max-width: 768px) {
-            h1 { font-size: 36px; padding: 0 10px; }
-            .subtitle { font-size: 16px; padding: 0 10px; }
-            
-            .bento-grid { 
-                grid-template-columns: 1fr; 
-                grid-template-rows: auto; 
+            .hero { padding: 50px 10px 40px; }
+            h1 { font-size: 38px; }
+            .subtitle { font-size: 16px; }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
                 gap: 16px;
             }
 
-            .card { padding: 24px; min-height: auto; }
-
-            /* 字帖卡片：左文右图 */
-            .card-main { 
-                flex-direction: row; 
-                align-items: center; 
-                justify-content: space-between;
-                min-height: 160px;
-            }
-            .card-main .content { max-width: 60%; }
-            .card-main .visual {
-                position: relative; right: auto; top: auto;
-                width: 35%; height: 100px;
-                opacity: 1; margin-left: 10px;
-                transform: rotate(-5deg);
+            .tool-card {
+                padding: 28px;
             }
 
-            /* 次要卡片 */
-            .card-sub { min-height: 180px; }
-            .card-title { font-size: 24px; }
-            .card-desc { font-size: 14px; }
+            .tool-icon { font-size: 40px; }
+            .tool-title { font-size: 22px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
             .hero { animation: none; }
-            .card, .card-main .visual { transition: none; }
-            .card:hover { transform: none; }
-            .card-main:hover .visual { transform: rotate(-5deg); }
+            .tool-card { transition: none; }
+            .tool-card:hover { transform: none; }
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <a class="skip-link" href="#main">跳到内容</a>
     <nav>
         <div class="nav-logo"><span>📦</span> YoBox</div>
         <a href="mailto:godblesswka@gmail.com" class="nav-link">联系开发者</a>
     </nav>
 
-    <main id="main">
+    <main>
         <section class="hero">
             <h1>让陪伴，更简单。</h1>
-            <div class="subtitle">YoBox，为小学生家长设计的私房工具箱。<br>没有广告，只有好用的工具。</div>
+            <p class="subtitle">为小学生家长精心打造的工具箱。没有广告，只有好用的工具。</p>
         </section>
 
-        <div class="bento-grid">
-            <!-- 核心功能 1：字帖 -->
-            <a href="zitie/" class="card card-main">
-                <div class="content">
-                    <span class="card-tag">旗舰应用</span>
-                    <h2 class="card-title">字帖工坊</h2>
-                    <p class="card-desc">内置人教版 1-3 年级全套生字库。支持笔顺分解、智能分卷。A4 纸完美打印。</p>
-                    <div class="card-meta" aria-label="打印规格">
-                        <span class="pill">A4 竖版</span>
-                        <span class="pill">多页</span>
-                        <span class="pill">弱网可缓存</span>
-                    </div>
-                </div>
-                <div class="visual"></div>
-            </a>
-
-            <!-- 核心功能 2：数位计数器 -->
-            <a href="math/" class="card card-sub">
-                <span class="badge badge--new">NEW</span>
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">🧮</div>
-                    <h2 class="card-title">数位计数器</h2>
-                </div>
-                <p class="card-desc">11-20 专项突破。看图写数、看数画珠。搞懂“个位”与“十位”的关系。</p>
-                <div class="card-meta" aria-label="打印规格">
+        <div class="tools-grid">
+            <!-- 字帖工坊 -->
+            <a href="zitie/" class="tool-card">
+                <div class="tool-icon">✏️</div>
+                <span class="tool-tag tag-main">核心工具</span>
+                <h2 class="tool-title">字帖工坊</h2>
+                <p class="tool-desc">内置人教版 1-3 年级全套生字库，支持笔顺分解、智能分卷，A4 纸完美打印。</p>
+                <div class="tool-meta">
                     <span class="pill">A4 竖版</span>
-                    <span class="pill">1 页/批</span>
+                    <span class="pill">田字格/米字格</span>
+                    <span class="pill">多页</span>
                 </div>
             </a>
 
-            <!-- 核心功能 3：听写助手 (已上线) -->
-            <a href="dictation/" class="card card-sub">
-                <span class="badge badge--online">NEW</span>
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">🎙️</div>
-                    <h2 class="card-title">听写助手</h2>
-                </div>
-                <p class="card-desc">解放双手。自动语音播报课文词语，语速可调，生成默写纸。</p>
-                <div class="card-meta" aria-label="打印规格">
+            <!-- 听写助手 -->
+            <a href="dictation/" class="tool-card green">
+                <div class="tool-icon">🎙️</div>
+                <span class="tool-tag tag-green">语音播报</span>
+                <h2 class="tool-title">听写助手</h2>
+                <p class="tool-desc">解放双手，自动语音播报课文词语。语速可调，一键生成默写纸。</p>
+                <div class="tool-meta">
                     <span class="pill">A4 横版</span>
-                    <span class="pill">田字格整页</span>
-                </div>
-            </a>
-
-            <!-- 新工具：口算生成器 -->
-            <a href="kousuan/" class="card card-sub">
-                <span class="badge badge--blue">NEW</span>
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">➕➖</div>
-                    <h2 class="card-title">口算生成器</h2>
-                </div>
-                <p class="card-desc">20 以内加减、凑十破十、填空题。一键换题，A4 直接打印。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">可选答案页</span>
-                </div>
-            </a>
-
-            <!-- 更多工具 -->
-            <a href="pinyin/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">🔤</div>
-                    <h2 class="card-title">拼音专项</h2>
-                </div>
-                <p class="card-desc">声母/韵母/整体认读 + 四线三格练习。一页一批，直接打印。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">四线三格</span>
-                </div>
-            </a>
-
-            <a href="shengzi/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">🀄️</div>
-                    <h2 class="card-title">生字巩固</h2>
-                </div>
-                <p class="card-desc">同音/形近字对比、组词、田字格练习。可自定义生字列表。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
                     <span class="pill">田字格</span>
-                </div>
-            </a>
-
-            <a href="langdu/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">📖</div>
-                    <h2 class="card-title">朗读打卡</h2>
-                </div>
-                <p class="card-desc">每日朗读/背诵清单与打卡表，适合贴墙或夹在作业本里。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">7/14/21 天</span>
-                </div>
-            </a>
-
-            <a href="mathplus/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">🧠</div>
-                    <h2 class="card-title">口算扩展</h2>
-                </div>
-                <p class="card-desc">100 以内加减（可选进位退位），为二年级提前热身。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">1 页/批</span>
-                </div>
-            </a>
-
-            <a href="mathconcepts/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">📏</div>
-                    <h2 class="card-title">数学概念</h2>
-                </div>
-                <p class="card-desc">人民币、钟表、单位换算。选主题，一键生成打印练习。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">一页一类</span>
-                </div>
-            </a>
-
-            <a href="kongbi/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">✍️</div>
-                    <h2 class="card-title">控笔练习</h2>
-                </div>
-                <p class="card-desc">线条、波浪、圆圈、折线。写字前热身，轻松不抵触。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">控笔图形</span>
-                </div>
-            </a>
-
-            <a href="habits/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">✅</div>
-                    <h2 class="card-title">作业与积分</h2>
-                </div>
-                <p class="card-desc">作业清单 + 每日积分格。配合贴纸/印章，习惯更容易养成。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">贴墙表</span>
-                </div>
-            </a>
-
-            <a href="cuotiben/" class="card card-sub">
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">📌</div>
-                    <h2 class="card-title">错题本</h2>
-                </div>
-                <p class="card-desc">粘贴错题/答案/思路，自动排版成复盘页（简版）。</p>
-                <div class="card-meta" aria-label="打印规格">
-                    <span class="pill">A4 竖版</span>
-                    <span class="pill">1-3 题/页</span>
-                </div>
-            </a>
-
-            <a href="wechat/banner1/banner.html" class="card card-sub">
-                <span class="badge badge--blue">NEW</span>
-                <div>
-                    <div style="font-size: 36px; margin: 15px 0 10px;">📰</div>
-                    <h2 class="card-title">公众号封面图</h2>
-                </div>
-                <p class="card-desc">上传竖图（登记照等），自动生成横向封面头图。支持模糊扩展与底部压暗。</p>
-                <div class="card-meta" aria-label="导出规格">
-                    <span class="pill">900×383</span>
-                    <span class="pill">一键下载</span>
+                    <span class="pill">可调语速</span>
                 </div>
             </a>
         </div>
